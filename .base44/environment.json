@@ -1,0 +1,32 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "VITE_SUPABASE_URL",
+      "description": "Supabase project URL (https://<project>.supabase.co). Found in Supabase dashboard → Project Settings → API. Alternatively provide VITE_SUPABASE_PROJECT_ID.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "VITE_SUPABASE_PUBLISHABLE_KEY",
+      "description": "Supabase anon/publishable key. Found in Supabase dashboard → Project Settings → API (the 'anon public' key).",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "VITE_SUPABASE_PROJECT_ID",
+      "description": "Supabase project ID (alternative to VITE_SUPABASE_URL; the URL is derived as https://<id>.supabase.co).",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "VITE_BASE44_APP_ID",
+      "description": "Legacy Base44 app id (optional — no calls go to Base44; the app is 100% Supabase).",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "VITE_BASE44_APP_BASE_URL",
+      "description": "Legacy Base44 backend URL (optional — unused at runtime).",
+      "requiredAtBoot": false
+    }
+  ]
+}

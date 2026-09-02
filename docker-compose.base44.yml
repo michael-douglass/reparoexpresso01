@@ -1,0 +1,17 @@
+services:
+  web:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - web_node_modules:/app/node_modules
+    ports:
+      - "3000:3002"
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    command: sh -c "corepack enable && pnpm install --no-frozen-lockfile && pnpm dev"
+    restart: unless-stopped
+
+volumes:
+  web_node_modules:
