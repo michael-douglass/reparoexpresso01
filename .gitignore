@@ -33,3 +33,4 @@ dist-ssr
 .env
 .vite
 Senhas e acessos.md
+base44/.app.jsonc
