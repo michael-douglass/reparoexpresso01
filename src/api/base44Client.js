@@ -1,20 +1,14 @@
-import { createAllEntityAdapters } from '@/lib/repositories/entityRegistry';
-import { createSupabaseAuthAdapter } from '@/lib/supabaseAuthAdapter';
-import { createSupabaseIntegrations } from '@/lib/supabaseStorage';
-import { invokeFunction } from '@/lib/supabaseFunctions';
+import { createClient } from '@base44/sdk';
+import { appParams } from '@/lib/app-params';
 
-/**
- * Cliente de API do frontend — 100% Supabase.
- * O export `base44` mantém compatibilidade com imports legados; nenhuma chamada vai à Base44.
- */
-export const base44 = {
-  entities: createAllEntityAdapters(),
-  auth: createSupabaseAuthAdapter(),
-  integrations: createSupabaseIntegrations(),
-  functions: {
-    invoke: invokeFunction,
-  },
-};
+const { appId, token, functionsVersion, appBaseUrl } = appParams;
 
-/** Alias preferencial para código novo. */
-export const api = base44;
+//Create a client with authentication required
+export const base44 = createClient({
+  appId,
+  token,
+  functionsVersion,
+  serverUrl: '',
+  requiresAuth: false,
+  appBaseUrl
+});

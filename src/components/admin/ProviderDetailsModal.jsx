@@ -1,5 +1,5 @@
 import React, { useState, useMutation } from 'react';
-import { X, Star, Phone, Mail, MapPin, Briefcase, Calendar, User, IdCard, ShieldCheck, ShieldOff, Plus, Trash2, Pencil } from 'lucide-react';
+import { X, Star, Phone, Mail, MapPin, Briefcase, Calendar, User, IdCard, ShieldCheck, ShieldOff, Plus, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from 'sonner';
-import { parseServiceOfferings } from '@/lib/providerRegistration';
 
 const SPECIALTY_OPTIONS = [
   { key: 'Elétrica', label: 'Elétrica' },
@@ -52,7 +51,7 @@ const SPECIALTY_LABELS = {
   fechadura: "Fechadura", ar_condicionado: "Ar Condicionado", outros: "Outros",
 };
 
-export default function ProviderDetailsModal({ provider, onClose, onApprove, onReject, onBlock, onEdit }) {
+export default function ProviderDetailsModal({ provider, onClose, onApprove, onReject, onBlock }) {
   const [blockReason, setBlockReason] = useState('');
   const [showBlockForm, setShowBlockForm] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -73,11 +72,8 @@ export default function ProviderDetailsModal({ provider, onClose, onApprove, onR
     { label: "Endereço", value: [provider.address, provider.neighborhood, provider.city, provider.state].filter(Boolean).join(', '), icon: MapPin },
     { label: "CEP", value: provider.zip_code },
     { label: "Anos de experiência", value: provider.experience_years != null ? `${provider.experience_years} anos` : null, icon: Briefcase },
-    { label: "Qualificações", value: provider.qualifications },
     { label: "Biografia", value: provider.bio },
   ];
-
-  const serviceOfferings = parseServiceOfferings(provider);
 
   const handleBlock = async () => {
     if (onBlock) {
@@ -209,19 +205,6 @@ export default function ProviderDetailsModal({ provider, onClose, onApprove, onR
               ) : null)}
             </div>
           </div>
-
-          {serviceOfferings.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Preço por hora</p>
-              <div className="flex flex-wrap gap-2">
-                {serviceOfferings.map((o) => (
-                  <Badge key={o.service_type} variant="secondary" className="text-xs">
-                    {o.label}: R$ {o.hourly_rate}/h
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Especialidades */}
           <div>
@@ -383,18 +366,6 @@ export default function ProviderDetailsModal({ provider, onClose, onApprove, onR
           {/* Ações */}
           {!provider.is_blocked && !provider.is_rejected && (
             <div className="flex gap-3 pt-2 flex-wrap">
-              {onEdit && (
-                <Button
-                  variant="outline"
-                  className="flex-1 rounded-2xl min-w-[140px]"
-                  onClick={() => {
-                    onEdit(provider);
-                    onClose();
-                  }}
-                >
-                  <Pencil className="w-4 h-4 mr-2" /> Editar dados
-                </Button>
-              )}
               {!provider.is_approved ? (
                 <>
                   <Button className="flex-1 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold" onClick={() => { onApprove(provider.id, true); onClose(); }}>

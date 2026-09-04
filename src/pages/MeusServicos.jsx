@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/lib/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_CONFIG = {
@@ -249,10 +248,14 @@ function ServiceCard({ service, onViewProvider }) {
 
 export default function MeusServicos() {
   const navigate = useNavigate();
-  const { user, isLoadingAuth } = useAuth();
+  const [user, setUser] = React.useState(null);
   const [statusFilter, setStatusFilter] = useState('todos');
   const [search, setSearch] = useState('');
   const [selectedService, setSelectedService] = useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me().then(u => setUser(u)).catch(() => navigate('/'));
+  }, [navigate]);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['meus-servicos', user?.email],
@@ -260,15 +263,7 @@ export default function MeusServicos() {
     enabled: !!user?.email,
   });
 
-  if (isLoadingAuth || (user?.email && isLoading)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const filtered = requests.filter((r) => {
+  const filtered = requests.filter(r => {
     const matchStatus = statusFilter === 'todos' || r.status === statusFilter;
     const searchTerm = search.toLowerCase();
     const matchSearch = !searchTerm || 
@@ -285,6 +280,14 @@ export default function MeusServicos() {
     cancelados: requests.filter(r => r.status === 'cancelado').length,
     ativos: requests.filter(r => !['concluido', 'cancelado'].includes(r.status)).length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

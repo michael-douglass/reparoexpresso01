@@ -1,2 +1,0 @@
--- Sincronizado com o remoto (versão 20260524031950).
--- Conteúdo equivalente: supabase/migrations/20260528120000_restore_admin_access.sql

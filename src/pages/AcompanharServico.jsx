@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, User, Phone, Star, MapPin, Wrench, AlertCircle, Plus } from "lucide-react";
 import FavoriteButton from '../components/FavoriteButton';
 import { cn } from "@/lib/utils";
-import DetailedRatingModal from '../components/DetailedRatingModal';
+import RatingModal from '../components/RatingModal';
 import RetornoModal from '../components/RetornoModal';
 import LocationTracker from '../components/LocationTracker';
 import ServiceChat from '../components/ServiceChat';
@@ -96,9 +96,9 @@ export default function AcompanharServico() {
       if (list[0]) {
         setRequest(list[0]);
       } else {
-        navigate('/inicio');
+        navigate('/');
       }
-    }).catch(() => navigate('/inicio'));
+    }).catch(() => navigate('/'));
     
     // Atualização em tempo real
     const unsub = base44.entities.ServiceRequest.subscribe((event) => {
@@ -174,7 +174,7 @@ export default function AcompanharServico() {
 
   const cancelRequest = useMutation({
     mutationFn: () => base44.entities.ServiceRequest.update(id, { status: 'cancelado' }),
-    onSuccess: () => navigate('/inicio'),
+    onSuccess: () => navigate('/'),
   });
 
   useEffect(() => {
@@ -185,9 +185,12 @@ export default function AcompanharServico() {
     }
   }, [request?.status, request?.rating_client, showSatisfactionSurvey]);
 
-  useEffect(() => {
-    if (!id) navigate('/inicio', { replace: true });
-  }, [id, navigate]);
+
+
+  if (!id) {
+    navigate('/');
+    return null;
+  }
 
   if (!request) {
     return (
@@ -671,7 +674,7 @@ export default function AcompanharServico() {
           <Button 
             variant="outline"
             className="w-full rounded-2xl"
-            onClick={() => navigate('/inicio')}
+            onClick={() => navigate('/')}
           >
             Voltar ao início
           </Button>
@@ -682,7 +685,7 @@ export default function AcompanharServico() {
         requestId={id}
         active={['aguardando','aceito','a_caminho','em_andamento'].includes(request?.status)}
       />
-      {showRating && <DetailedRatingModal requestId={id} request={request} onClose={handleRatingClose} />}
+      {showRating && <RatingModal requestId={id} onClose={handleRatingClose} />}
       {showRetorno && <RetornoModal request={request} onClose={() => setShowRetorno(false)} />}
       {showSatisfactionSurvey && user && (
         <SatisfactionSurveyModal

@@ -1,2 +1,0 @@
--- Sincronizado com o remoto (versão 20260524033724).
--- Conteúdo equivalente: supabase/migrations/20260529120000_media_library.sql

@@ -1,9 +1,6 @@
 #env
 .env
-.env.local
-.env.*.local
-.env.netlify
-!.env.example
+.env.*
 
 # Logs
 /logs
@@ -32,5 +29,3 @@ dist-ssr
 
 .env
 .vite
-Senhas e acessos.md
-base44/.app.jsonc
