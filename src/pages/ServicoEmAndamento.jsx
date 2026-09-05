@@ -140,7 +140,7 @@ export default function ServicoEmAndamento() {
         providerName={service.provider_name || user?.full_name}
         onComplete={() => {
           setShowSignModal(false);
-          navigate('/prestador');
+          navigate(`/avaliacao/${id}`);
         }}
       />
     </div>

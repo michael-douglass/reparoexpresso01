@@ -1,0 +1,46 @@
+{
+  "name": "ClientReview",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID do cliente avaliado"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Nome do cliente avaliado (desnormalizado)"
+    },
+    "provider_id": {
+      "type": "string",
+      "description": "ID do prestador que avaliou"
+    },
+    "provider_name": {
+      "type": "string",
+      "description": "Nome do prestador que avaliou (desnormalizado)"
+    },
+    "service_request_id": {
+      "type": "string",
+      "description": "ID do servi\u00e7o relacionado"
+    },
+    "overall_rating": {
+      "type": "number",
+      "description": "Nota geral do cliente de 1 a 5"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Coment\u00e1rio do prestador sobre o cliente"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags r\u00e1pidas selecionadas (ex: Cliente pontual, Facilitou acesso, Pagou em dia)"
+    }
+  },
+  "required": [
+    "client_id",
+    "provider_id",
+    "overall_rating"
+  ]
+}

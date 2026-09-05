@@ -1019,16 +1019,24 @@ export default function ProviderApp() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground mb-3">Total: {completedJobs.length} serviço(s) concluído(s)</p>
               {[...completedJobs].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map(job => (
-                <div key={job.id} className="bg-card rounded-2xl p-4 border border-border flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm">{SERVICE_LABELS[job.service_type] || job.service_type}</p>
-                    <p className="text-xs text-muted-foreground truncate">{job.client_name} · {job.city}</p>
-                    {job.created_date && (
-                      <p className="text-xs text-muted-foreground">{new Date(job.created_date).toLocaleDateString('pt-BR')}</p>
-                    )}
+                <div key={job.id} className="bg-card rounded-2xl p-4 border border-border space-y-2">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm">{SERVICE_LABELS[job.service_type] || job.service_type}</p>
+                      <p className="text-xs text-muted-foreground truncate">{job.client_name} · {job.city}</p>
+                      {job.created_date && (
+                        <p className="text-xs text-muted-foreground">{new Date(job.created_date).toLocaleDateString('pt-BR')}</p>
+                      )}
+                    </div>
+                    {job.final_price && <span className="text-sm font-bold text-primary">R$ {job.final_price}</span>}
                   </div>
-                  {job.final_price && <span className="text-sm font-bold text-primary">R$ {job.final_price}</span>}
+                  <button
+                    onClick={() => navigate(`/avaliacao/${job.id}`)}
+                    className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1"
+                  >
+                    ⭐ Avaliar cliente
+                  </button>
                 </div>
               ))}
             </div>

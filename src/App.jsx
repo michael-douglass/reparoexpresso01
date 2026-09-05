@@ -36,6 +36,7 @@ import MeusServicos from './pages/MeusServicos';
 import ProviderMetricsPanel from './pages/ProviderMetricsPanel';
 import Jornada from './pages/Jornada';
 import ServicoEmAndamento from './pages/ServicoEmAndamento';
+import AvaliacaoMutua from './pages/AvaliacaoMutua';
 import { Toaster as SonnerToaster } from "sonner";
 
 const AuthenticatedApp = () => {
@@ -90,6 +91,7 @@ const AuthenticatedApp = () => {
         <Route path="/painel-metricas" element={<ProviderMetricsPanel />} />
         <Route path="/jornada" element={<Jornada />} />
         <Route path="/servico-andamento/:id" element={<ServicoEmAndamento />} />
+        <Route path="/avaliacao/:id" element={<AvaliacaoMutua />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

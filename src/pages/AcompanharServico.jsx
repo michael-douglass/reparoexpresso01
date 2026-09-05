@@ -268,7 +268,7 @@ export default function AcompanharServico() {
           {request.status === 'concluido' && !request.rating_client && (
             <Button
               size="sm"
-              onClick={() => setShowRating(true)}
+              onClick={() => navigate(`/avaliacao/${id}`)}
               className="rounded-full text-xs bg-green-600 hover:bg-green-700 text-white font-bold gap-1"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> Concluído?
