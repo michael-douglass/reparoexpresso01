@@ -67,82 +67,83 @@ export default function AcompanharServico() {
   useClientNotifications(user?.email);
 
   const [allRequests, setAllRequests] = useState([]);
+  const [request, setRequest] = useState(null);
 
+  // useEffect unificado: carrega request atual + allRequests + uma única subscription
   useEffect(() => {
-    if (!user?.email) return;
-    base44.entities.ServiceRequest.filter({ created_by: user.email }, '-created_date', 50)
-      .then(setAllRequests);
+    if (!id) return;
+
+    let cancelled = false;
+
+    const loadInitial = async () => {
+      try {
+        // 1. Busca o request atual (get é mais leve que filter)
+        const current = await base44.entities.ServiceRequest.get(id);
+        if (cancelled) return;
+        if (!current) { navigate('/'); return; }
+        setRequest(current);
+
+        // 2. Busca allRequests para detecção de lote (apenas se logado)
+        if (user?.email) {
+          const all = await base44.entities.ServiceRequest.filter({ created_by: user.email }, '-created_date', 50);
+          if (cancelled) return;
+          setAllRequests(all);
+        }
+      } catch {
+        if (!cancelled) navigate('/');
+      }
+    };
+    loadInitial();
+
+    // Subscription única — atualiza request E allRequests
     const unsub = base44.entities.ServiceRequest.subscribe((event) => {
+      if (event.id === id && (event.type === 'update' || event.type === 'create')) {
+        setRequest(event.data);
+      }
       if (event.type === 'update') {
         setAllRequests(prev => prev.map(r => r.id === event.id ? event.data : r));
-      } else if (event.type === 'create' && event.data?.created_by === user.email) {
+      } else if (event.type === 'create' && event.data?.created_by === user?.email) {
         setAllRequests(prev => [event.data, ...prev]);
       }
     });
-    return unsub;
-  }, [user?.email]);
+    return () => { cancelled = true; unsub(); };
+  }, [id, navigate, user?.email]);
 
   const handleRatingClose = (didRate = false) => {
     setShowRating(false);
     if (didRate) {
-      // Após avaliar: mostra pesquisa de satisfação primeiro
       setTimeout(() => setShowSatisfactionSurvey(true), 400);
     } else {
-      // Pulou avaliação: mostra gratificação
       setTimeout(() => setShowTipRequest(true), 300);
     }
   };
 
-  const [request, setRequest] = useState(null);
-
-  useEffect(() => {
-    if (!id) return;
-    // Carga inicial
-    base44.entities.ServiceRequest.filter({ id }).then(list => {
-      if (list[0]) {
-        setRequest(list[0]);
-      } else {
-        navigate('/');
-      }
-    }).catch(() => navigate('/'));
-    
-    // Atualização em tempo real
-    const unsub = base44.entities.ServiceRequest.subscribe((event) => {
-      if (event.id === id) {
-        if (event.type === 'update' || event.type === 'create') {
-          setRequest(event.data);
-        }
-      }
-    });
-    return unsub;
-  }, [id, navigate]);
-
-  // Busca dados completos do prestador (rating, total de serviços, foto)
+  // Busca dados do prestador principal + fotos de prestadores do lote (uma chamada por prestador, com cache)
   useEffect(() => {
     if (!request?.provider_id) return;
+    // Prestador principal
     base44.entities.Provider.filter({ id: request.provider_id }).then(list => {
       if (list[0]) {
         setProviderData(list[0]);
         setProviderPhotos(prev => ({ ...prev, [request.provider_id]: list[0].photo_url || null }));
       }
     }).catch(() => {});
-  }, [request?.provider_id]);
 
-  // Busca fotos dos prestadores envolvidos
-  useEffect(() => {
-    if (!request?.provider_id && allRequests.length === 0) return;
-    const ids = [...new Set(
+    // Fotos dos outros prestadores do lote — busca em sequência para evitar rate limit
+    const batchProviderIds = [...new Set(
       allRequests
-        .filter(r => r.provider_id)
+        .filter(r => r.provider_id && r.provider_id !== request.provider_id)
         .map(r => r.provider_id)
-        .concat(request?.provider_id ? [request.provider_id] : [])
     )];
-    ids.forEach(pid => {
+    // Busca sequencialmente (não paralelo) para evitar rate limit
+    batchProviderIds.reduce(async (promise, pid) => {
+      await promise;
       if (providerPhotos[pid] !== undefined) return;
-      base44.entities.Provider.filter({ id: pid }).then(list => {
+      try {
+        const list = await base44.entities.Provider.filter({ id: pid });
         if (list[0]) setProviderPhotos(prev => ({ ...prev, [pid]: list[0].photo_url || null }));
-      }).catch(() => {});
-    });
+      } catch {}
+    }, Promise.resolve());
   }, [request?.provider_id, allRequests.length]);
 
 
