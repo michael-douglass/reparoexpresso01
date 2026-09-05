@@ -45,6 +45,10 @@ export default function ServiceChecklist({ job, onClose }) {
   const [finalSignature, setFinalSignature] = useState(null);
   const [finalSignerPhoto, setFinalSignerPhoto] = useState(null);
   const [finalCpf, setFinalCpf] = useState('');
+  const [providerCpf, setProviderCpf] = useState('');
+  const [providerPhoto, setProviderPhoto] = useState(null);
+  const [providerSignature, setProviderSignature] = useState(null);
+  const [uploadingProviderPhoto, setUploadingProviderPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -107,6 +111,26 @@ export default function ServiceChecklist({ job, onClose }) {
   const allAuthorizationsChecked = AUTHORIZATION_ITEMS.every(item => authorizationItems[item]);
   const canSave = allChecked && allAuthorizationsChecked && preAuthSignature && finalSignature && serviceDescription.trim().length > 5;
 
+  const handleProviderPhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingProviderPhoto(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setProviderPhoto(file_url);
+    } catch {}
+    setUploadingProviderPhoto(false);
+  };
+
+  const formatCpf = (v) => {
+    const d = v.replace(/\D/g, '');
+    return d
+      .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+      .replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3')
+      .replace(/(\d{3})(\d{3})/, '$1.$2')
+      .replace(/(\d{3})/, '$1');
+  };
+
   const uploadBase64AsFile = async (base64DataUrl, filename) => {
     if (!base64DataUrl) return null;
     const res = await fetch(base64DataUrl);
@@ -120,11 +144,12 @@ export default function ServiceChecklist({ job, onClose }) {
     setSaving(true);
 
     // Upload base64 photos to storage before saving
-    const [preAuthSignerPhotoUrl, preAuthSignatureUrl, finalSignerPhotoUrl, finalSignatureUrl] = await Promise.all([
+    const [preAuthSignerPhotoUrl, preAuthSignatureUrl, finalSignerPhotoUrl, finalSignatureUrl, providerSignatureUrl] = await Promise.all([
       uploadBase64AsFile(preAuthSignerPhoto, 'pre_auth_signer_photo.jpg'),
       uploadBase64AsFile(preAuthSignature, 'pre_auth_signature.png'),
       uploadBase64AsFile(finalSignerPhoto, 'final_signer_photo.jpg'),
       uploadBase64AsFile(finalSignature, 'final_signature.png'),
+      uploadBase64AsFile(providerSignature, 'provider_signature.png'),
     ]);
 
     const checklistData = {
@@ -142,6 +167,9 @@ export default function ServiceChecklist({ job, onClose }) {
       final_signature: finalSignatureUrl,
       final_signer_photo: finalSignerPhotoUrl,
       final_cpf: finalCpf,
+      provider_cpf: providerCpf,
+      provider_photo: providerPhoto,
+      provider_signature: providerSignatureUrl,
       location,
       completed_at: new Date().toISOString(),
     };
@@ -450,6 +478,56 @@ export default function ServiceChecklist({ job, onClose }) {
               if (!data) { setFinalSignature(null); setFinalSignerPhoto(null); return; }
               setFinalSignature(data.signature);
               setFinalSignerPhoto(data.signer_photo || null);
+            }} />
+          </div>
+
+          {/* Identificação do prestador */}
+          <div className="space-y-3 bg-amber-50 rounded-2xl p-4 border border-amber-200">
+            <p className="text-sm font-bold text-amber-900">👷 Identificação do prestador</p>
+            <p className="text-xs text-amber-700">Registro do CPF, foto e assinatura do prestador responsável pelo atendimento.</p>
+            <div>
+              <label className="text-xs font-semibold text-amber-800 flex items-center gap-1 mb-1">
+                <CreditCard className="w-3.5 h-3.5" /> CPF do prestador (opcional)
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={14}
+                placeholder="000.000.000-00"
+                value={providerCpf}
+                onChange={e => setProviderCpf(formatCpf(e.target.value))}
+                className="w-full rounded-xl border border-amber-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-amber-800 flex items-center gap-1 mb-2">
+                <Plus className="w-3.5 h-3.5" /> Foto do prestador (opcional)
+              </label>
+              {providerPhoto ? (
+                <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-amber-300">
+                  <img src={providerPhoto} alt="Prestador" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => setProviderPhoto(null)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center"
+                  >
+                    <X className="w-3.5 h-3.5 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <label className={cn(
+                  "w-24 h-24 rounded-2xl border-2 border-dashed border-amber-300 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-colors bg-white",
+                  uploadingProviderPhoto && "opacity-50 pointer-events-none"
+                )}>
+                  {uploadingProviderPhoto
+                    ? <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
+                    : <><Plus className="w-6 h-6 text-amber-500" /><span className="text-xs text-amber-600 mt-1">Selfie</span></>}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleProviderPhotoUpload} capture="user" />
+                </label>
+              )}
+            </div>
+            <SignaturePad label="Assinatura do prestador (opcional)" onSave={(data) => {
+              if (!data) { setProviderSignature(null); return; }
+              setProviderSignature(data.signature);
             }} />
           </div>
 
