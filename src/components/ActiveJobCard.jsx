@@ -330,6 +330,13 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
               Preencha o checklist antes de finalizar o serviço.
             </div>
           )}
+          <a href={`/servico-andamento/${liveJob.id}`} className="block">
+            <Button
+              className="w-full rounded-2xl bg-[#008744] hover:bg-[#006d37] text-white font-bold h-12 gap-2"
+            >
+              <Wrench className="w-4 h-4" /> Abrir Serviço em Andamento
+            </Button>
+          </a>
           <div className="flex gap-2">
             <Button
               size="sm"

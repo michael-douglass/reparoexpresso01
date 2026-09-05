@@ -35,6 +35,7 @@ import ClienteDossie from './pages/ClienteDossie';
 import MeusServicos from './pages/MeusServicos';
 import ProviderMetricsPanel from './pages/ProviderMetricsPanel';
 import Jornada from './pages/Jornada';
+import ServicoEmAndamento from './pages/ServicoEmAndamento';
 import { Toaster as SonnerToaster } from "sonner";
 
 const AuthenticatedApp = () => {
@@ -88,6 +89,7 @@ const AuthenticatedApp = () => {
         <Route path="/cadastro-parceiro" element={<PartnerRegister />} />
         <Route path="/painel-metricas" element={<ProviderMetricsPanel />} />
         <Route path="/jornada" element={<Jornada />} />
+        <Route path="/servico-andamento/:id" element={<ServicoEmAndamento />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
