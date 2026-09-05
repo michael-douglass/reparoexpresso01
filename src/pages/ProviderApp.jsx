@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { MapPin, Phone, Clock, CheckCircle2, Wrench, Star, BellRing, X, Check, ClipboardList, Calendar, CalendarOff, PauseCircle, BarChart3 } from "lucide-react";
+import { MapPin, Phone, Clock, CheckCircle2, Wrench, Star, BellRing, X, Check, ClipboardList, Calendar, CalendarOff, PauseCircle, BarChart3, Lock } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import ProviderUnavailabilitySection from '../components/ProviderUnavailabilitySection';
 import GoogleReviewQRCode from '../components/GoogleReviewQRCode';
@@ -753,7 +753,12 @@ export default function ProviderApp() {
                     {job.problem_photos?.length > 0 && (
                       <div className="flex gap-1.5 mb-1.5 overflow-x-auto pb-0.5">
                         {job.problem_photos.map((url, i) => (
-                          <img key={i} src={url} alt={`Foto ${i+1}`} className="w-12 h-12 object-cover rounded-lg flex-shrink-0 border border-border" />
+                          <div key={i} className="relative w-12 h-12 flex-shrink-0">
+                            <img src={url} alt={`Foto ${i+1}`} className="w-12 h-12 object-cover rounded-lg border border-border blur-lg scale-110" />
+                            <div className="absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center pointer-events-none">
+                              <Lock className="w-3 h-3 text-white/70" />
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -843,13 +848,16 @@ export default function ProviderApp() {
                   {req.problem_photos?.length > 0 && (
                     <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
                       {req.problem_photos.map((url, i) => (
-                        <img 
-                          key={i} 
-                          src={url} 
-                          alt={`Foto ${i+1}`} 
-                          onClick={() => setLightboxUrl(url)}
-                          className="w-16 h-16 object-cover rounded-xl flex-shrink-0 border border-border cursor-pointer hover:opacity-75 transition-opacity" 
-                        />
+                        <div key={i} className="relative w-16 h-16 flex-shrink-0">
+                          <img
+                            src={url}
+                            alt={`Foto ${i+1}`}
+                            className="w-16 h-16 object-cover rounded-xl border border-border blur-lg scale-110"
+                          />
+                          <div className="absolute inset-0 bg-black/30 rounded-xl flex items-center justify-center pointer-events-none">
+                            <Lock className="w-4 h-4 text-white/70" />
+                          </div>
+                        </div>
                       ))}
                     </div>
                   )}

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Phone, MapPin, Clock, AlertCircle, CheckCircle2, ZoomIn } from 'lucide-react';
+import { X, Phone, MapPin, Clock, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
 
 const TIMEOUT_SECONDS = 120; // 2 minutos para aceitar ou recusar
 
 export default function NewServiceFullscreenModal({ service, onAccept, onDecline, onTimeout }) {
-  const [lightboxIndex, setLightboxIndex] = useState(null);
   const [timeLeft, setTimeLeft] = useState(TIMEOUT_SECONDS);
   const photos = service.problem_photos || [];
   const hasPhotos = photos.length > 0;
@@ -45,11 +44,6 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
   const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   const isUrgent = timeLeft <= 30;
 
-  const openLightbox = (idx) => setLightboxIndex(idx);
-  const closeLightbox = () => setLightboxIndex(null);
-  const nextPhoto = () => setLightboxIndex((prev) => (prev == null ? prev : (prev + 1) % photos.length));
-  const prevPhoto = () => setLightboxIndex((prev) => (prev == null ? prev : (prev - 1 + photos.length) % photos.length));
-
   return (
     <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-slate-900 to-slate-950 flex flex-col">
       {/* Header */}
@@ -79,25 +73,24 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-          {/* Photos Section — thumbnails (amplia só ao clicar) */}
+          {/* Photos Section — fotos embacadas até aceitar o chamado */}
           {hasPhotos ? (
             <div className="lg:col-span-2 flex flex-col">
               <div className="bg-black/30 rounded-2xl p-4 border border-white/10">
-                <p className="text-xs font-semibold text-slate-400 uppercase mb-3 flex items-center gap-1">
-                  <ZoomIn className="w-3.5 h-3.5" /> Toque em uma foto para ampliar
+                <p className="text-xs font-semibold text-amber-400 uppercase mb-3 flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5" /> Aceite o chamado para ver as fotos em detalhe
                 </p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {photos.map((photo, idx) => (
-                    <button
+                    <div
                       key={idx}
-                      onClick={() => openLightbox(idx)}
-                      className="relative aspect-square rounded-lg overflow-hidden border-2 border-white/20 hover:border-green-500 transition-all cursor-pointer group"
+                      className="relative aspect-square rounded-lg overflow-hidden border-2 border-white/20"
                     >
-                      <img src={photo} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                        <ZoomIn className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <img src={photo} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover blur-xl scale-110" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Lock className="w-6 h-6 text-white/70" />
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -108,46 +101,6 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
                 <AlertCircle className="w-16 h-16 text-slate-400 mx-auto mb-3" />
                 <p className="text-slate-300">Nenhuma foto disponível</p>
               </div>
-            </div>
-          )}
-
-          {/* Lightbox — abre só ao clicar */}
-          {lightboxIndex !== null && (
-            <div
-              className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center p-4"
-              onClick={closeLightbox}
-            >
-              <button
-                className="absolute top-4 right-4 text-white bg-black/70 hover:bg-black rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold z-[10001]"
-                onClick={closeLightbox}
-              >
-                ×
-              </button>
-              <img
-                src={photos[lightboxIndex]}
-                alt="Foto ampliada"
-                className="max-w-[95vw] max-h-[90vh] object-contain rounded-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
-              {photos.length > 1 && (
-                <>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl z-[10001]"
-                  >
-                    ←
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl z-[10001]"
-                  >
-                    →
-                  </button>
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-2 rounded-full text-sm text-white z-[10001]">
-                    {lightboxIndex + 1} / {photos.length}
-                  </div>
-                </>
-              )}
             </div>
           )}
 
