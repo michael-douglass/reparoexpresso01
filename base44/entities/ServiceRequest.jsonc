@@ -80,6 +80,18 @@
       },
       "description": "URLs das fotos do problema"
     },
+    "cliente_tem_peca": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o cliente j\u00e1 tem as pe\u00e7as no local (s\u00f3 m\u00e3o de obra)"
+    },
+    "foto_peca_cliente": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs das fotos das pe\u00e7as que o cliente j\u00e1 comprou"
+    },
     "address": {
       "type": "string",
       "description": "Rua"

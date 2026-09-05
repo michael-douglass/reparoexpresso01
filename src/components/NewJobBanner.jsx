@@ -68,6 +68,9 @@ export default function NewJobBanner({ job, queueCount = 1, onAccept, onDecline 
                 {job.description?.startsWith('RETORNO POR PEÇA') && (
                   <span className="text-xs font-bold px-2 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-300">🔧 Retorno por Peça</span>
                 )}
+                {job.cliente_tem_peca && (
+                  <span className="text-xs font-bold px-2 py-1 rounded-lg bg-green-100 text-green-700 border border-green-400">🔧 PEÇAS NO LOCAL</span>
+                )}
               </div>
               <p className="text-sm text-muted-foreground mb-2 line-clamp-3">{job.description}</p>
 
@@ -82,6 +85,23 @@ export default function NewJobBanner({ job, queueCount = 1, onAccept, onDecline 
                       className="w-20 h-20 object-cover rounded-xl flex-shrink-0 border border-border"
                     />
                   ))}
+                </div>
+              )}
+
+              {/* Fotos das peças do cliente */}
+              {job.cliente_tem_peca && job.foto_peca_cliente?.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-bold text-green-700 mb-1">📦 Peças que o cliente já tem:</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {job.foto_peca_cliente.map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt={`Peça ${i + 1}`}
+                        className="w-16 h-16 object-cover rounded-xl flex-shrink-0 border-2 border-green-400"
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 

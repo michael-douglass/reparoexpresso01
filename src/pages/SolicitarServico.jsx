@@ -190,6 +190,8 @@ export default function SolicitarServico() {
    description: urlParams.get('descricao') || '',
    client_suggested_price: '',
    problem_photos: [],
+   cliente_tem_peca: false,
+   foto_peca_cliente: [],
    address: '',
    number: '',
    neighborhood: '',
@@ -394,7 +396,20 @@ export default function SolicitarServico() {
   };
 
   const removePhoto = (idx) => {
-    setForm(prev => ({ ...prev, problem_photos: prev.problem_photos.filter((_, i) => i !== idx) }));
+   setForm(prev => ({ ...prev, problem_photos: prev.problem_photos.filter((_, i) => i !== idx) }));
+  };
+
+  const handlePecaPhotoUpload = async (e) => {
+   const files = Array.from(e.target.files);
+   if (!files.length) return;
+   setUploadingPhotos(true);
+   const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url)));
+   setForm(prev => ({ ...prev, foto_peca_cliente: [...prev.foto_peca_cliente, ...urls] }));
+   setUploadingPhotos(false);
+  };
+
+  const removePecaPhoto = (idx) => {
+   setForm(prev => ({ ...prev, foto_peca_cliente: prev.foto_peca_cliente.filter((_, i) => i !== idx) }));
   };
 
   // Verifica se todas as descrições por serviço estão preenchidas (quando múltiplos serviços)
@@ -408,8 +423,9 @@ export default function SolicitarServico() {
       ? form.description.length > 5
       : form.service_type.every(t => (descriptionsPerService[t]?.description || '').length > 5);
     
-    return hasDescriptions && hasMinPhotos;
-  };
+    const hasPecaPhoto = !form.cliente_tem_peca || form.foto_peca_cliente.length >= 1;
+    return hasDescriptions && hasMinPhotos && hasPecaPhoto;
+    };
 
   const applyGeolocation = () => {
     if (location) {
@@ -1417,6 +1433,56 @@ export default function SolicitarServico() {
                   </div>
                 )}
               </div>
+
+              {/* Toggle: Peças no local */}
+              {!isTow && (
+                <div className="mt-2 bg-green-50 border-2 border-green-200 rounded-2xl p-4 space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.cliente_tem_peca}
+                      onChange={e => set('cliente_tem_peca', e.target.checked)}
+                      className="w-5 h-5 rounded accent-green-600 flex-shrink-0"
+                    />
+                    <div>
+                      <p className="text-sm font-bold text-green-800">✅ Já tenho as peças no local</p>
+                      <p className="text-xs text-green-700">Só preciso da mão de obra — serviço mais rápido</p>
+                    </div>
+                  </label>
+                  {form.cliente_tem_peca && (
+                    <div className="space-y-2 border-t border-green-200 pt-3">
+                      <Label className="flex items-center gap-2 text-sm"><Camera className="w-4 h-4" /> Foto das peças *</Label>
+                      <p className="text-xs text-green-700">Tire uma foto das peças que você já comprou</p>
+                      <div className="flex flex-wrap gap-2">
+                        {form.foto_peca_cliente.map((url, idx) => (
+                          <div key={idx} className="relative">
+                            <div className="w-20 h-20 rounded-xl overflow-hidden border border-green-300 cursor-pointer" onClick={() => setLightboxSrc(url)}>
+                              <img src={url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <button onClick={() => removePecaPhoto(idx)} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center">
+                              <X className="w-3 h-3 text-white" />
+                            </button>
+                          </div>
+                        ))}
+                        {form.foto_peca_cliente.length < 3 && (
+                          <label className={cn("flex flex-col items-center justify-center cursor-pointer", uploadingPhotos && "opacity-50 pointer-events-none")}>
+                            <div className="w-20 h-20 rounded-xl border-2 border-dashed border-green-300 flex flex-col items-center justify-center hover:border-green-500 transition-colors">
+                              {uploadingPhotos ? <Loader2 className="w-5 h-5 text-green-600 animate-spin" /> : <Camera className="w-6 h-6 text-green-600" />}
+                            </div>
+                            <span className="text-xs text-green-600 mt-1">{uploadingPhotos ? "..." : "Adicionar"}</span>
+                            <input type="file" accept="image/*" multiple className="hidden" onChange={handlePecaPhotoUpload} capture="environment" />
+                          </label>
+                        )}
+                      </div>
+                      {form.foto_peca_cliente.length === 0 && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-2 text-xs text-orange-700">
+                          ⚠️ Foto das peças é obrigatória quando marcar esta opção
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             // Múltiplos serviços — campo individual por OS
@@ -1860,6 +1926,7 @@ export default function SolicitarServico() {
               </p>
             )}
             {form.problem_photos.length > 0 && <p className="text-sm text-muted-foreground">📷 {form.problem_photos.length} foto(s) anexada(s)</p>}
+             {form.cliente_tem_peca && <p className="text-sm text-green-600 font-semibold">🔧 Peças no local — só mão de obra ({form.foto_peca_cliente.length} foto(s))</p>}
              {form.client_suggested_price && <p className="text-sm text-muted-foreground">💰 Sugestão de valor: R$ {Number(form.client_suggested_price).toFixed(2)}</p>}
              <p className="text-sm text-muted-foreground">
                {form.modality === 'agendado' ? `📅 Agendado: ${form.scheduled_date} às ${form.scheduled_time}` : `⚡ ${URGENCY.find(u => u.value === form.urgency)?.label}`}

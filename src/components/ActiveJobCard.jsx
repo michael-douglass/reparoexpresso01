@@ -355,14 +355,16 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
               <CheckCircle2 className="w-4 h-4 mr-1" /> Finalizar
             </Button>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full rounded-xl border-purple-400 text-purple-600 hover:bg-purple-50"
-            onClick={() => setShowExtraChargesModal(true)}
-          >
-            <PlusCircle className="w-4 h-4 mr-1" /> Orçamento extra
-          </Button>
+          {!liveJob.cliente_tem_peca && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full rounded-xl border-purple-400 text-purple-600 hover:bg-purple-50"
+              onClick={() => setShowExtraChargesModal(true)}
+            >
+              <PlusCircle className="w-4 h-4 mr-1" /> Orçamento extra
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"
@@ -512,8 +514,29 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
           {liveJob.description?.startsWith('RETORNO POR PEÇA') && (
             <span className="text-xs font-bold px-2 py-1 rounded-lg bg-blue-100 text-blue-700 border border-blue-300">🔧 Retorno por Peça</span>
           )}
+          {liveJob.cliente_tem_peca && (
+            <span className="text-xs font-bold px-2 py-1 rounded-lg bg-green-100 text-green-700 border border-green-400 flex items-center gap-1">
+              🔧 PEÇAS NO LOCAL
+            </span>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">{liveJob.description}</p>
+        {liveJob.cliente_tem_peca && (
+          <div className="mt-2 bg-green-50 border border-green-200 rounded-xl p-3 space-y-2">
+            <p className="text-xs font-bold text-green-800 flex items-center gap-1">
+              ✅ Cliente já tem as peças — só mão de obra
+            </p>
+            {liveJob.foto_peca_cliente?.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {liveJob.foto_peca_cliente.map((url, i) => (
+                  <div key={i} onClick={() => setLightboxUrl(url)} className="cursor-pointer">
+                    <img src={url} alt={`Peça ${i + 1}`} className="w-16 h-16 object-cover rounded-lg border-2 border-green-300 hover:border-green-500 transition-colors" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {liveJob.problem_photos?.length > 0 && (
           <div className="mt-3 space-y-2">
             <p className="text-xs font-semibold text-primary flex items-center gap-1">

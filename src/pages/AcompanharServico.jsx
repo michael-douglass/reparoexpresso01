@@ -280,6 +280,11 @@ export default function AcompanharServico() {
       {/* Service type + scheduled */}
       <div className="text-center mb-3">
         <h2 className="text-xl font-bold text-foreground">{SERVICE_LABELS[request.service_type] || request.service_type}</h2>
+        {request.cliente_tem_peca && (
+          <span className="inline-block mt-1.5 text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-700 border border-green-400">
+            🔧 Peças no local — só mão de obra
+          </span>
+        )}
         {request.modality === 'agendado' && request.scheduled_date && (
           <div className="inline-flex items-center gap-2 mt-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold">
             <span>📅</span>
