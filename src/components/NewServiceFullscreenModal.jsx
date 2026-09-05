@@ -1,19 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Phone, MapPin, Clock, AlertCircle, CheckCircle2, ZoomIn } from 'lucide-react';
 
+const TIMEOUT_SECONDS = 120; // 2 minutos para aceitar ou recusar
+
 export default function NewServiceFullscreenModal({ service, onAccept, onDecline }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(TIMEOUT_SECONDS);
   const photos = service.problem_photos || [];
   const hasPhotos = photos.length > 0;
+  const declinedRef = useRef(false);
 
   const handleAccept = () => {
+    declinedRef.current = true; // bloqueia auto-recusa
     onAccept(service);
   };
 
   const handleDecline = () => {
+    declinedRef.current = true;
     onDecline(service);
   };
+
+  // Timer regressivo — ao zerar, recusa automaticamente e repassa o serviço
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if (!declinedRef.current) {
+            declinedRef.current = true;
+            onDecline(service);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [service, onDecline]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const isUrgent = timeLeft <= 30;
 
   const openLightbox = (idx) => setLightboxIndex(idx);
   const closeLightbox = () => setLightboxIndex(null);
@@ -32,8 +61,13 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
             </div>
             <p className="text-sm text-slate-300 mt-1">Visualize os detalhes e aceite ou recuse</p>
           </div>
+          {/* Timer regressivo */}
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${isUrgent ? 'bg-red-500/20 border-red-500/50 animate-pulse' : 'bg-white/5 border-white/10'}`}>
+            <Clock className={`w-5 h-5 ${isUrgent ? 'text-red-400' : 'text-slate-300'}`} />
+            <span className={`text-lg font-bold font-mono ${isUrgent ? 'text-red-400' : 'text-white'}`}>{timeStr}</span>
+          </div>
           <button
-            onClick={onDecline}
+            onClick={handleDecline}
             className="text-white/60 hover:text-white transition-colors"
           >
             <X className="w-6 h-6" />
@@ -166,8 +200,15 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
               </div>
             )}
 
+            {/* Aviso de timeout */}
+            <div className={`text-center text-xs ${isUrgent ? 'text-red-400 font-bold' : 'text-slate-400'}`}>
+              {isUrgent
+                ? `⚠️ Restam ${timeStr} — o chamado será repassado a outro prestador!`
+                : `⏱️ Você tem ${timeStr} para responder. Após esse tempo, o chamado vai para outro prestador.`}
+            </div>
+
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-2">
               <Button
                 onClick={handleDecline}
                 variant="outline"
