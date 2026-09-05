@@ -476,6 +476,20 @@ export default function SolicitarServico() {
   });
 
   const createRequestRef = useRef(false);
+
+  // Gera senhas e número de atendimento no frontend (backend functions indisponíveis no plano atual)
+  const generatePassword = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+  const generateServiceNumber = async () => {
+    try {
+      const all = await base44.entities.ServiceRequest.list('-created_date', 1000);
+      const padded = String(all.length + 1).padStart(6, '0');
+      return `ATD-${padded}`;
+    } catch {
+      return `ATD-${Date.now().toString().slice(-6)}`;
+    }
+  };
+
   const createRequest = useMutation({
     mutationFn: async (formData) => {
       const { _secondProvider, requires_two_providers, tv_size, _caixaCondominio, _substituicaoTelhaTipo, ...cleanData } = formData;
@@ -483,12 +497,19 @@ export default function SolicitarServico() {
         ? cleanData.service_type
         : [cleanData.service_type];
 
+      const serviceNumber = await generateServiceNumber();
+      const now = new Date().toISOString();
+
       const baseData = {
         ...cleanData,
         client_suggested_price: cleanData.client_suggested_price ? Number(cleanData.client_suggested_price) : null,
         estimated_price: cleanData.estimated_price ? Number(cleanData.estimated_price) : null,
         status: 'aguardando',
         estimated_arrival_minutes: cleanData.estimated_arrival_minutes ?? null,
+        service_number: serviceNumber,
+        security_password: generatePassword(),
+        validation_password: generatePassword(),
+        passwords_generated_at: now,
       };
 
       if (isTow && form.latitude && form.delivery_latitude) {
@@ -497,12 +518,10 @@ export default function SolicitarServico() {
 
       const results = await Promise.all(
         serviceTypes.map(type => {
-          // Para caixa d'água, sempre usa descriptionsPerService pois a descrição é preenchida automaticamente
           const hasPerService = descriptionsPerService[type]?.description;
           const description = hasPerService ? descriptionsPerService[type].description : baseData.description;
           const problem_photos = hasPerService ? (descriptionsPerService[type]?.photos || []) : baseData.problem_photos;
 
-          // Para TV acima de 55", adiciona info no description e cria OS para o 2º prestador também
           const isTvLarge = type === 'instalacao_suporte_tv' && tv_size === 'acima55';
           const finalDescription = isTvLarge
             ? `[TV acima de 55"] ${description}`
@@ -510,56 +529,48 @@ export default function SolicitarServico() {
             ? `[TV até 55"] ${description}`
             : description;
 
-          return base44.entities.ServiceRequest.create({ ...baseData, service_type: type, description: finalDescription, problem_photos });
+          // Cada OS recebe suas próprias senhas e número
+          return base44.entities.ServiceRequest.create({
+            ...baseData,
+            service_type: type,
+            description: finalDescription,
+            problem_photos,
+            security_password: generatePassword(),
+            validation_password: generatePassword(),
+          });
         })
       );
-
-          const ensurePasswords = async (requestId) => {
-        try {
-          await base44.functions.invoke('generateServicePasswords', { request_id: requestId });
-        } catch (e) {
-          // Silencia — a automação onServiceCreated já deve ter gerado
-        }
-      };
 
       // 2º prestador: caixa d'água condomínio ou telha fibrocimento
       for (const [cond, svcType] of [[_caixaCondominio && serviceTypes.includes('limpeza_caixa_dagua'), 'limpeza_caixa_dagua'], [_substituicaoTelhaTipo === 'fibrocimento' && serviceTypes.includes('substituicao_telha'), 'substituicao_telha']]) {
         if (cond && _secondProvider) {
           const d2 = descriptionsPerService[svcType]?.description || baseData.description;
           const p2 = descriptionsPerService[svcType]?.photos || baseData.problem_photos;
-          const os2 = await base44.entities.ServiceRequest.create({ ...baseData, service_type: svcType, description: `[Prestador 2] ${d2}`, problem_photos: p2 });
-          setTimeout(() => ensurePasswords(os2.id), 3000);
+          await base44.entities.ServiceRequest.create({
+            ...baseData,
+            service_type: svcType,
+            description: `[Prestador 2] ${d2}`,
+            problem_photos: p2,
+            security_password: generatePassword(),
+            validation_password: generatePassword(),
+          });
         }
       }
 
       // Se TV acima de 55" e tem segundo prestador, cria OS adicional para ele
       if (tv_size === 'acima55' && _secondProvider && serviceTypes.includes('instalacao_suporte_tv')) {
-        const firstResult = results.find((_, i) => serviceTypes[i] === 'instalacao_suporte_tv');
-        if (firstResult) {
-          const hasPerService = serviceTypes.length > 1 && descriptionsPerService['instalacao_suporte_tv'];
-          const description = hasPerService ? (descriptionsPerService['instalacao_suporte_tv']?.description || '') : baseData.description;
-          const problem_photos = hasPerService ? (descriptionsPerService['instalacao_suporte_tv']?.photos || []) : baseData.problem_photos;
-          const secondOS = await base44.entities.ServiceRequest.create({
-            ...baseData,
-            service_type: 'instalacao_suporte_tv',
-            description: `[TV acima de 55" - Prestador 2] ${description}`,
-            problem_photos,
-          });
-          // Aguarda 3s para a automação processar; se senha ainda não foi gerada, força geração
-          setTimeout(() => ensurePasswords(secondOS.id), 3000);
-        }
+        const hasPerService = serviceTypes.length > 1 && descriptionsPerService['instalacao_suporte_tv'];
+        const description = hasPerService ? (descriptionsPerService['instalacao_suporte_tv']?.description || '') : baseData.description;
+        const problem_photos = hasPerService ? (descriptionsPerService['instalacao_suporte_tv']?.photos || []) : baseData.problem_photos;
+        await base44.entities.ServiceRequest.create({
+          ...baseData,
+          service_type: 'instalacao_suporte_tv',
+          description: `[TV acima de 55" - Prestador 2] ${description}`,
+          problem_photos,
+          security_password: generatePassword(),
+          validation_password: generatePassword(),
+        });
       }
-
-      results.forEach(r => {
-        setTimeout(async () => {
-          try {
-            const current = await base44.entities.ServiceRequest.filter({ id: r.id });
-            if (current[0] && !current[0].security_password) {
-              await base44.functions.invoke('generateServicePasswords', { request_id: r.id });
-            }
-          } catch (e) { /* silencia */ }
-        }, 3000);
-      });
 
       return results[0];
     },
