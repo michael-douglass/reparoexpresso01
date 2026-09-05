@@ -22,6 +22,11 @@ import BatchProviderChat from '../components/BatchProviderChat';
 import ClientTicketForm from '../components/ClientTicketForm';
 import CouponInput from '../components/CouponInput';
 import useClientNotifications from '../hooks/useClientNotifications';
+import ServiceStatusBanner from '../components/tracking/ServiceStatusBanner';
+import ServiceTrackingMap from '../components/tracking/ServiceTrackingMap';
+import ProviderTrackingCard from '../components/tracking/ProviderTrackingCard';
+import ServiceProgressStepper from '../components/tracking/ServiceProgressStepper';
+import { ArrowLeft } from "lucide-react";
 
 const STATUS_STEPS = [
   { key: "aguardando", label: "Aguardando prestador", icon: Clock },
@@ -52,6 +57,7 @@ export default function AcompanharServico() {
   const [user, setUser] = useState(null);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [providerPhotos, setProviderPhotos] = useState({});
+  const [providerData, setProviderData] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -110,6 +116,17 @@ export default function AcompanharServico() {
     });
     return unsub;
   }, [id, navigate]);
+
+  // Busca dados completos do prestador (rating, total de serviços, foto)
+  useEffect(() => {
+    if (!request?.provider_id) return;
+    base44.entities.Provider.filter({ id: request.provider_id }).then(list => {
+      if (list[0]) {
+        setProviderData(list[0]);
+        setProviderPhotos(prev => ({ ...prev, [request.provider_id]: list[0].photo_url || null }));
+      }
+    }).catch(() => {});
+  }, [request?.provider_id]);
 
   // Busca fotos dos prestadores envolvidos
   useEffect(() => {
@@ -221,47 +238,91 @@ export default function AcompanharServico() {
   }[request.status] || "text-muted-foreground bg-muted";
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto px-4 py-6">
+    <div className="min-h-screen bg-background max-w-lg mx-auto px-4 py-4 pb-20">
       <NotificationPermissionBanner />
       {/* Header */}
-      <div className="text-center mb-6">
-        {/* Quick Access Button */}
-        <div className="flex justify-center mb-4">
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-accent rounded-xl transition-colors flex-shrink-0">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-lg font-bold text-foreground flex-1 text-center">Acompanhar Serviço</h1>
+        <div className="w-9 flex-shrink-0" />
+      </div>
+
+      {/* ID + Concluído button */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        {request.service_number && (
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-card border border-border text-xs font-mono font-bold text-foreground">
+            {request.service_number}
+          </span>
+        )}
+        <div className="flex items-center gap-2">
           <Button
             size="sm"
             variant="outline"
             onClick={() => navigate('/garantia')}
             className="rounded-full text-xs border-primary/30 text-primary hover:bg-primary/10"
           >
-            🛡️ Minha Garantia
+            🛡️ Garantia
           </Button>
+          {request.status === 'concluido' && !request.rating_client && (
+            <Button
+              size="sm"
+              onClick={() => setShowRating(true)}
+              className="rounded-full text-xs bg-green-600 hover:bg-green-700 text-white font-bold gap-1"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" /> Concluído?
+            </Button>
+          )}
         </div>
+      </div>
 
-        <div className={cn("inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3", statusColor)}>
-          {request.status === 'aguardando' && <Clock className="w-4 h-4 animate-pulse" />}
-          {request.status === 'a_caminho' && <span>🚗</span>}
-          {request.status === 'concluido' && <CheckCircle2 className="w-4 h-4" />}
-          {request.status === 'cancelado' && <AlertCircle className="w-4 h-4" />}
-          {STATUS_STEPS.find(s => s.key === request.status)?.label || request.status}
-        </div>
-        <h1 className="text-2xl font-bold text-foreground">{SERVICE_LABELS[request.service_type] || request.service_type}</h1>
-        {request.service_number && (
-          <p className="text-xs font-mono font-bold text-primary/80 mt-1">Nº {request.service_number}</p>
-        )}
-        {request.provider_name && otherBatchRequests.length > 0 && (
-          <p className="text-sm font-semibold text-primary mt-1">🔧 {request.provider_name}</p>
-        )}
+      {/* Service type + scheduled */}
+      <div className="text-center mb-3">
+        <h2 className="text-xl font-bold text-foreground">{SERVICE_LABELS[request.service_type] || request.service_type}</h2>
         {request.modality === 'agendado' && request.scheduled_date && (
-          <div className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm font-semibold">
+          <div className="inline-flex items-center gap-2 mt-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold">
             <span>📅</span>
             {new Date(request.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             {request.scheduled_time && <><span>·</span><span>🕐 {request.scheduled_time}</span></>}
           </div>
         )}
-        <p className="text-muted-foreground text-sm mt-1 flex items-center justify-center gap-1">
-          <MapPin className="w-3 h-3" /> {request.address}
-        </p>
       </div>
+
+      {/* Status Banner */}
+      <div className="mb-3">
+        <ServiceStatusBanner status={request.status} />
+      </div>
+
+      {/* Map — only when provider is on the way or at location */}
+      {['aceito', 'a_caminho', 'em_andamento'].includes(request.status) && (
+        <div className="mb-3">
+          <ServiceTrackingMap request={request} />
+        </div>
+      )}
+
+      {/* Provider Card */}
+      {request.provider_name && (
+        <div className="mb-3">
+          <ProviderTrackingCard
+            request={request}
+            provider={providerData}
+            onCall={() => {
+              if (request.provider_phone) {
+                window.open(`tel:${request.provider_phone.replace(/\D/g, '')}`);
+              }
+            }}
+            onChat={() => document.getElementById('chat-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+          />
+        </div>
+      )}
+
+      {/* Progress Stepper */}
+      {request.status !== 'cancelado' && request.status !== 'aguardando' && (
+        <div className="mb-3">
+          <ServiceProgressStepper status={request.status} />
+        </div>
+      )}
 
       {/* Painel de múltiplos prestadores */}
       <BatchProvidersPanel batchRequests={batchRequests} currentId={id} />
@@ -313,72 +374,6 @@ export default function AcompanharServico() {
       {/* Badge de Garantia */}
       {request.status === 'concluido' && (
         <WarrantyBadge request={request} />
-      )}
-
-      {/* Progress */}
-      {request.status !== 'cancelado' && (
-        <div className="bg-card rounded-3xl p-5 border border-border mb-5">
-          <div className="space-y-4">
-            {["aguardando", "aceito", "a_caminho", "em_andamento", "concluido"].map((step) => {
-              const statusOrder = ["aguardando", "aceito", "a_caminho", "em_andamento", "concluido"];
-              const currentIdx = statusOrder.indexOf(request.status);
-              const stepIdx = statusOrder.indexOf(step);
-              const isCompleted = currentIdx >= stepIdx;
-              const isCurrent = currentIdx === stepIdx;
-              const labels = { aguardando: "Aguardando prestador", aceito: "Prestador confirmado", a_caminho: "Prestador a caminho", em_andamento: "Em execução", concluido: "Concluído" };
-              return (
-                <div key={step} className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold transition-all",
-                    isCompleted ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
-                  )}>
-                    {isCompleted ? "✓" : <span className="text-xs">{stepIdx + 1}</span>}
-                  </div>
-                  <span className={cn(
-                    "text-sm font-medium",
-                    isCompleted ? "text-green-700 font-semibold" : "text-muted-foreground"
-                  )}>
-                    {labels[step]}
-                    {isCurrent && !['concluido'].includes(step) && (
-                      <span className="ml-2 inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    )}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Prestador a caminho - destaque */}
-      {request.status === 'a_caminho' && (
-        <div className="bg-orange-50 border border-orange-200 rounded-3xl p-4 mb-5 flex items-center gap-3">
-          <div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-            <span className="text-xl">🚗</span>
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-orange-800 text-sm">Prestador a caminho!</p>
-            <p className="text-xs text-orange-600">Acompanhe a localização em tempo real</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => navigate(`/rastreamento/${id}`)}
-            className="rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold flex-shrink-0"
-          >
-            📍 Ver
-          </Button>
-        </div>
-      )}
-
-      {/* Map Link para estados iniciais */}
-      {['aguardando', 'aceito', 'a_caminho'].includes(request?.status) && (
-        <Button
-          onClick={() => navigate(`/mapa/${id}`)}
-          variant="outline"
-          className="w-full rounded-2xl h-11 mb-5 border-primary/30 text-primary hover:bg-primary/10 font-semibold"
-        >
-          🗺️ Ver Mapa de Localização
-        </Button>
       )}
 
       {/* Prestador(es) info */}
@@ -478,11 +473,13 @@ export default function AcompanharServico() {
 
       {/* Chat */}
       {['aceito','a_caminho','em_andamento','concluido'].includes(request.status) && (
-        <ServiceChat
-          requestId={id}
-          senderRole="cliente"
-          senderName={request.client_name}
-        />
+        <div id="chat-section" className="mb-5">
+          <ServiceChat
+            requestId={id}
+            senderRole="cliente"
+            senderName={request.client_name}
+          />
+        </div>
       )}
 
       {/* Preço estimado ou final */}
