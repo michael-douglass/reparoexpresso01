@@ -60,6 +60,15 @@ export default function UserProfile() {
     enabled: !!user?.email,
   });
 
+  const { data: clientReviews = [] } = useQuery({
+    queryKey: ['client-detailed-reviews-profile', user?.id],
+    queryFn: () => base44.entities.Review.filter({ client_id: user.id }),
+    enabled: !!user?.id,
+  });
+
+  const detailedReviewsCount = clientReviews.filter(r => r.is_detailed).length;
+  const isAvaliadorElite = detailedReviewsCount >= 3;
+
   const handleLogout = () => {
     base44.auth.logout('/');
   };
@@ -123,6 +132,19 @@ export default function UserProfile() {
             <p className="text-xs text-muted-foreground mt-1">Pendentes</p>
           </div>
         </div>
+
+        {/* Medalha Avaliador de Elite */}
+        {isAvaliadorElite && (
+          <div className="mt-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-300 rounded-2xl p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center flex-shrink-0">
+              <Trophy className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-amber-800">🏆 Avaliador de Elite</p>
+              <p className="text-xs text-amber-700">{detailedReviewsCount} avaliações detalhadas com fotos</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Serviços Preventivos Recorrentes */}

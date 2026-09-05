@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
-import { ArrowLeft, Star, Trophy, Zap, Gift, Shield, Clock, ChevronRight, Lock } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, Zap, Gift, Shield, Clock, ChevronRight, Lock, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import JornadaHeroCard from '@/components/jornada/JornadaHeroCard';
@@ -34,6 +34,14 @@ export default function Jornada() {
     ),
     enabled: !!user?.email,
   });
+
+  const { data: clientReviews = [] } = useQuery({
+    queryKey: ['client-detailed-reviews', user?.id],
+    queryFn: () => base44.entities.Review.filter({ client_id: user.id }),
+    enabled: !!user?.id,
+  });
+
+  const detailedReviewsCount = clientReviews.filter(r => r.is_detailed).length;
 
   const totalServices = loyalty?.total_services ?? serviceRequests.length;
   const totalSpent = loyalty?.total_spent ?? 0;
@@ -66,6 +74,27 @@ export default function Jornada() {
         userName={user?.full_name}
       />
 
+      {/* Medalha de Avaliador de Elite */}
+      {detailedReviewsCount >= 3 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-2xl p-4 flex items-center gap-3 amber-glow-sm"
+        >
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center flex-shrink-0">
+            <Award className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-amber-800 flex items-center gap-1.5">
+              🏆 Avaliador de Elite
+            </p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              {detailedReviewsCount} avaliações detalhadas com fotos — medalha especial exibida no seu perfil!
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-muted rounded-2xl p-1">
         {tabs.map(tab => (
@@ -89,7 +118,7 @@ export default function Jornada() {
         <JornadaNivelRoadmap totalServices={totalServices} />
       )}
       {activeTab === 'badges' && (
-        <JornadaBadgesGrid totalServices={totalServices} totalSpent={totalSpent} totalPoints={totalPoints} serviceRequests={serviceRequests} />
+        <JornadaBadgesGrid totalServices={totalServices} totalSpent={totalSpent} totalPoints={totalPoints} serviceRequests={serviceRequests} detailedReviewsCount={detailedReviewsCount} />
       )}
       {activeTab === 'beneficios' && (
         <JornadaBeneficios totalServices={totalServices} />

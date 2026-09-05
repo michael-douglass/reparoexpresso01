@@ -21,6 +21,10 @@ const BADGES = [
   { key: 'points_100',         cat: 'pontos',    emoji: '⚡', nome: 'Acumulador',          desc: 'Acumulou 100 pontos',                 req: (s, sp, pts) => pts >= 100,  hint: '100 pontos', recompensa: null },
   { key: 'points_500',         cat: 'pontos',    emoji: '🚀', nome: 'Power User',          desc: 'Acumulou 500 pontos',                 req: (s, sp, pts) => pts >= 500,  hint: '500 pontos', recompensa: null },
   { key: 'points_1000',        cat: 'pontos',    emoji: '🌟', nome: 'Super Star',          desc: 'Acumulou 1.000 pontos',               req: (s, sp, pts) => pts >= 1000, hint: '1.000 pontos', recompensa: 'Resgate duplo' },
+  // Avaliações
+  { key: 'first_review',       cat: 'avaliacoes',emoji: '📝', nome: 'Primeira Voz',         desc: 'Fez sua 1ª avaliação de serviço',       req: (s, sp, pts, reqs, drc) => drc >= 1,  hint: '1 avaliação', recompensa: '+10 pts' },
+  { key: 'reviewer_3',         cat: 'avaliacoes',emoji: '💬', nome: 'Avaliador Ativo',      desc: 'Fez 3 avaliações de serviços',         req: (s, sp, pts, reqs, drc) => drc >= 3,  hint: '3 avaliações', recompensa: '+25 pts' },
+  { key: 'avaliador_elite',    cat: 'avaliacoes',emoji: '🏆', nome: 'Avaliador de Elite',   desc: 'Fez 3 avaliações detalhadas com fotos e texto', req: (s, sp, pts, reqs, drc) => drc >= 3, hint: '3 avaliações detalhadas', recompensa: 'Medalha especial + 50 pts/avaliação', especial: true },
 ];
 
 const CAT_LABELS = {
@@ -29,13 +33,14 @@ const CAT_LABELS = {
   gastos:   '💳 Gastos',
   pontos:   '⚡ Pontos',
   especiais:'✨ Especiais',
+  avaliacoes:'📝 Avaliações',
 };
 
-export default function JornadaBadgesGrid({ totalServices, totalSpent, totalPoints, serviceRequests }) {
+export default function JornadaBadgesGrid({ totalServices, totalSpent, totalPoints, serviceRequests, detailedReviewsCount = 0 }) {
   const [filter, setFilter] = useState('todos');
   const [selected, setSelected] = useState(null);
 
-  const unlocked = (badge) => badge.req(totalServices, totalSpent, totalPoints, serviceRequests);
+  const unlocked = (badge) => badge.req(totalServices, totalSpent, totalPoints, serviceRequests, detailedReviewsCount);
 
   const filtered = filter === 'todos' ? BADGES : BADGES.filter(b => b.cat === filter);
   const unlockedCount = BADGES.filter(b => unlocked(b)).length;
@@ -91,7 +96,9 @@ export default function JornadaBadgesGrid({ totalServices, totalSpent, totalPoin
               className={cn(
                 'rounded-2xl border-2 p-3 flex flex-col items-center text-center transition-all active:scale-95',
                 isUnlocked
-                  ? 'border-primary/50 bg-primary/5 shadow-sm'
+                  ? badge.especial
+                    ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-md amber-glow-sm'
+                    : 'border-primary/50 bg-primary/5 shadow-sm'
                   : 'border-border/40 bg-muted/20 opacity-55'
               )}
             >
@@ -102,7 +109,12 @@ export default function JornadaBadgesGrid({ totalServices, totalSpent, totalPoin
                 {badge.nome}
               </p>
               {isUnlocked && badge.recompensa && (
-                <span className="mt-1.5 text-[9px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded-full">
+                <span className={cn(
+                  'mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full',
+                  badge.especial
+                    ? 'bg-amber-200 text-amber-800'
+                    : 'bg-green-100 text-green-700'
+                )}>
                   {badge.recompensa}
                 </span>
               )}
@@ -146,10 +158,29 @@ export default function JornadaBadgesGrid({ totalServices, totalSpent, totalPoin
                 <h3 className="text-xl font-bold text-foreground mb-1">{selected.nome}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{selected.desc}</p>
                 {unlocked(selected) ? (
-                  <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-                    <p className="text-green-700 font-bold text-sm">✅ Badge conquistado!</p>
+                  <div className={cn(
+                    'border rounded-2xl p-4',
+                    selected.especial
+                      ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-300'
+                      : 'bg-green-50 border-green-200'
+                  )}>
+                    <p className={cn(
+                      'font-bold text-sm flex items-center justify-center gap-1.5',
+                      selected.especial ? 'text-amber-700' : 'text-green-700'
+                    )}>
+                      {selected.especial && '🏆 '}
+                      {selected.especial ? 'Medalha Especial Conquistada!' : '✅ Badge conquistado!'}
+                    </p>
                     {selected.recompensa && (
-                      <p className="text-green-600 text-xs mt-1">🎁 Benefício: {selected.recompensa}</p>
+                      <p className={cn(
+                        'text-xs mt-1 text-center',
+                        selected.especial ? 'text-amber-600' : 'text-green-600'
+                      )}>🎁 Benefício: {selected.recompensa}</p>
+                    )}
+                    {selected.especial && (
+                      <p className="text-xs text-amber-600 mt-2 text-center">
+                        Esta medalha é exibida em destaque no seu perfil público.
+                      </p>
                     )}
                   </div>
                 ) : (

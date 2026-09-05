@@ -3,9 +3,11 @@ import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, CheckCircle2, ThumbsUp } from "lucide-react";
+import { Star, CheckCircle2, ThumbsUp, Sparkles, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from 'sonner';
+import ReviewPhotoUpload from './ReviewPhotoUpload';
 
 const RATING_LABELS = {
   1: "Muito ruim 😞",
@@ -15,13 +17,23 @@ const RATING_LABELS = {
   5: "Excelente! 🤩",
 };
 
+// Pontos por tipo de avaliação
+const PONTOS_AVALIACAO = {
+  basica: 10,      // Apenas estrelas
+  com_texto: 25,   // Estrelas + comentário
+  detalhada: 50,   // Estrelas + comentário + fotos (Avaliador de Elite)
+};
+
 export default function RatingModal({ requestId, onClose }) {
   const [overallRating, setOverallRating] = useState(5);
   const [punctualityRating, setPunctualityRating] = useState(5);
   const [qualityRating, setQualityRating] = useState(5);
   const [behaviorRating, setBehaviorRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [photos, setPhotos] = useState([]);
   const [done, setDone] = useState(false);
+  const [pontosGanhos, setPontosGanhos] = useState(0);
+  const [isDetailed, setIsDetailed] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: request } = useQuery({
@@ -32,10 +44,21 @@ export default function RatingModal({ requestId, onClose }) {
     },
   });
 
+  // Determinar tipo de avaliação e pontos
+  const getTipoAvaliacao = () => {
+    if (comment.trim().length >= 10 && photos.length > 0) return 'detalhada';
+    if (comment.trim().length >= 10) return 'com_texto';
+    return 'basica';
+  };
+
   const submitRating = useMutation({
     mutationFn: async () => {
-      // Criar registro de avaliação detalhada
       const user = await base44.auth.me();
+      const tipo = getTipoAvaliacao();
+      const isDetailedReview = tipo === 'detalhada';
+      const pontos = PONTOS_AVALIACAO[tipo];
+
+      // Criar registro de avaliação detalhada
       await base44.entities.Review.create({
         professional_id: request?.provider_id,
         provider_id: request?.provider_id,
@@ -47,23 +70,98 @@ export default function RatingModal({ requestId, onClose }) {
         quality_rating: qualityRating,
         behavior_rating: behaviorRating,
         comment: comment,
+        photos: photos,
+        is_detailed: isDetailedReview,
         service_description: request?.service_type,
       });
 
-      // Atualizar ServiceRequest com nota geral (backward compatibility)
+      // Atualizar ServiceRequest com nota geral
       await base44.entities.ServiceRequest.update(requestId, {
         rating_client: overallRating,
         rating_comment: comment,
       });
+
+      // Conceder pontos de fidelidade
+      if (user?.id) {
+        try {
+          // Buscar ou criar registro de CustomerLoyalty
+          const existing = await base44.entities.CustomerLoyalty.filter({ client_id: user.id });
+          let loyalty = existing[0];
+
+          if (loyalty) {
+            const newTotal = (loyalty.total_points || 0) + pontos;
+            const newAvailable = (loyalty.available_points || 0) + pontos;
+            await base44.entities.CustomerLoyalty.update(loyalty.id, {
+              total_points: newTotal,
+              available_points: newAvailable,
+            });
+          } else {
+            loyalty = await base44.entities.CustomerLoyalty.create({
+              client_id: user.id,
+              client_email: user.email,
+              total_points: pontos,
+              available_points: pontos,
+              total_services: 1,
+              tier: 'bronze',
+            });
+          }
+
+          // Registrar transação de pontos
+          await base44.entities.LoyaltyTransaction.create({
+            client_id: user.id,
+            type: 'earned',
+            points: pontos,
+            description: isDetailedReview
+              ? 'Avaliação detalhada com fotos (Avaliador de Elite)'
+              : tipo === 'com_texto'
+                ? 'Avaliação com comentário'
+                : 'Avaliação do serviço',
+            request_id: requestId,
+            reference_type: 'service_completion',
+            balance_after: (loyalty?.available_points || 0) + pontos,
+          });
+
+          // Verificar medalha "Avaliador de Elite" (3+ avaliações detalhadas)
+          if (isDetailedReview) {
+            const allReviews = await base44.entities.Review.filter({ client_id: user.id });
+            const detailedCount = allReviews.filter(r => r.is_detailed).length;
+            if (detailedCount >= 3) {
+              // Verificar se já tem a conquista
+              const existingAchievements = await base44.entities.ProviderAchievement.filter({
+                provider_id: user.id,
+                achievement_id: 'avaliador_elite',
+              });
+              if (existingAchievements.length === 0) {
+                await base44.entities.ProviderAchievement.create({
+                  provider_id: user.id,
+                  achievement_id: 'avaliador_elite',
+                  progress: detailedCount,
+                  unlocked: true,
+                  unlocked_at: new Date().toISOString(),
+                });
+                toast.success('🏆 Medalha desbloqueada: Avaliador de Elite!');
+              }
+            }
+          }
+
+          setPontosGanhos(pontos);
+          setIsDetailed(isDetailedReview);
+        } catch (err) {
+          console.error('Erro ao conceder pontos:', err);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service-request', requestId] });
       queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-loyalty'] });
       setDone(true);
-      // Fecha automaticamente após 1.5s avisando que avaliou
-      setTimeout(() => onClose(true), 1500);
+      setTimeout(() => onClose(true), 2500);
     },
   });
+
+  const tipoAtual = getTipoAvaliacao();
+  const pontosAtuais = PONTOS_AVALIACAO[tipoAtual];
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -152,12 +250,40 @@ export default function RatingModal({ requestId, onClose }) {
               {/* Comentário */}
               <div className="mb-4">
                 <Textarea
-                  placeholder="Deixe um comentário (opcional)..."
+                  placeholder="Deixe um comentário detalhado (mín. 10 caracteres para pontos extras)..."
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   className="rounded-2xl min-h-[60px] resize-none"
                   maxLength={300}
                 />
+                {comment.trim().length >= 10 && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> +15 pts por comentário!
+                  </p>
+                )}
+              </div>
+
+              {/* Upload de Fotos */}
+              <div className="mb-4">
+                <ReviewPhotoUpload photos={photos} onPhotosChange={setPhotos} max={4} />
+                {photos.length > 0 && comment.trim().length >= 10 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mt-2 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-2.5 flex items-center gap-2"
+                  >
+                    <Award className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <p className="text-xs text-amber-700 font-semibold">
+                      Avaliação Detalhada! +50 pts e progresso para a medalha "Avaliador de Elite" 🏆
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Indicador de pontos */}
+              <div className="bg-primary/5 rounded-xl p-3 mb-4 flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Pontos que você ganhará:</p>
+                <p className="text-lg font-bold text-primary">+{pontosAtuais} pts</p>
               </div>
 
               <Button
@@ -188,6 +314,38 @@ export default function RatingModal({ requestId, onClose }) {
                   <Star key={s} className={cn("w-6 h-6", s <= overallRating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30")} />
                 ))}
               </div>
+
+              {/* Pontos ganhos */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: 'spring' }}
+                className="bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 rounded-2xl p-4 mb-3"
+              >
+                <p className="text-sm font-bold text-primary flex items-center justify-center gap-1.5">
+                  <Sparkles className="w-4 h-4" />
+                  +{pontosGanhos} pontos de fidelidade!
+                </p>
+              </motion.div>
+
+              {/* Medalha de Avaliador de Elite */}
+              {isDetailed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-300 rounded-2xl p-4 mb-4"
+                >
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <span className="text-2xl">🏆</span>
+                    <p className="text-sm font-bold text-amber-700">Avaliador de Elite</p>
+                  </div>
+                  <p className="text-xs text-amber-600">
+                    Avaliação detalhada registrada! Faça 3 avaliações com fotos para desbloquear a medalha especial no seu perfil.
+                  </p>
+                </motion.div>
+              )}
+
               {comment && (
                 <p className="text-sm text-muted-foreground mb-4 italic">"{comment}"</p>
               )}
