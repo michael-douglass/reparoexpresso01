@@ -84,30 +84,6 @@ export default function ProviderApp() {
   }, []);
 
   const [requests, setRequests] = useState([]);
-
-  useEffect(() => {
-    if (!provider?.is_online || !provider?.is_approved) {
-      setRequests([]);
-      return;
-    }
-    // Carga inicial
-    base44.entities.ServiceRequest.filter({ status: 'aguardando' }).then(all => {
-      setRequests(all.filter(r => !r.provider_id || r.provider_id !== provider?.id));
-    });
-    // Tempo real via subscribe
-    const unsub = base44.entities.ServiceRequest.subscribe((event) => {
-      setRequests(prev => {
-        if (event.type === 'delete') return prev.filter(r => r.id !== event.id);
-        const isAvailable = event.data?.status === 'aguardando' && (!event.data?.provider_id || event.data?.provider_id !== provider?.id);
-        if (!isAvailable) return prev.filter(r => r.id !== event.id);
-        const exists = prev.some(r => r.id === event.id);
-        if (exists) return prev.map(r => r.id === event.id ? event.data : r);
-        return [...prev, event.data];
-      });
-    });
-    return unsub;
-  }, [provider?.is_online, provider?.is_approved, provider?.id]);
-
   const [myJobs, setMyJobs] = useState([]);
   // em_espera: job pausado (não bloqueia aceitar novos chamados)
   const activeJob = myJobs.find(j => ['aceito', 'a_caminho', 'em_andamento', 'em_espera'].includes(j.status));
@@ -133,34 +109,66 @@ export default function ProviderApp() {
     enabled: !!(provider?.is_online && provider?.is_approved),
   });
 
+  // useEffect unificado — carrega requests E myJobs + uma única subscription
   useEffect(() => {
     if (!provider?.id) return;
-    // Carga inicial — busca jobs atribuídos OU serviços agendados (status 'agendado')
-    Promise.all([
-      base44.entities.ServiceRequest.filter({ provider_id: provider.id }, '-created_date', 100),
-      base44.entities.ServiceRequest.filter({ status: 'agendado' }, '-created_date', 50),
-    ]).then(([jobs, scheduled]) => {
-      const combined = [...jobs, ...scheduled.filter(s => s.provider_id !== provider.id)];
-      setMyJobs(combined);
-    });
-    
-    // Real-time via subscribe
+
+    let cancelled = false;
+
+    // Carga inicial sequencial para evitar rate limit
+    const loadInitial = async () => {
+      try {
+        // 1. Meus jobs (atribuídos + agendados) — uma chamada que cobre ambos
+        const myAssigned = await base44.entities.ServiceRequest.filter({ provider_id: provider.id }, '-created_date', 100);
+        if (cancelled) return;
+        const scheduled = await base44.entities.ServiceRequest.filter({ status: 'agendado' }, '-created_date', 50);
+        if (cancelled) return;
+        const combined = [...myAssigned, ...scheduled.filter(s => s.provider_id !== provider.id)];
+        setMyJobs(combined);
+
+        // 2. Chamados disponíveis (apenas se online e aprovado)
+        if (provider?.is_online && provider?.is_approved) {
+          const available = await base44.entities.ServiceRequest.filter({ status: 'aguardando' });
+          if (cancelled) return;
+          setRequests(available.filter(r => !r.provider_id || r.provider_id !== provider.id));
+        }
+      } catch (e) {
+        // Silencia erros de rate limit — a subscription cobre em tempo real
+      }
+    };
+    loadInitial();
+
+    // Subscription única para ServiceRequest — atualiza requests E myJobs
     const unsub = base44.entities.ServiceRequest.subscribe((event) => {
       if (!['create', 'update', 'delete'].includes(event.type)) return;
-      const isMyJob = event.data?.provider_id === provider.id;
-      const isScheduledJob = event.data?.status === 'agendado'; // Serviços agendados para o futuro
-      if (!isMyJob && !isScheduledJob) return;
-      
-      setMyJobs(prev => {
-        if (event.type === 'delete') return prev.filter(j => j.id !== event.id);
-        // Para create e update: upsert — adiciona se não existir, atualiza se existir
-        const exists = prev.some(j => j.id === event.id);
-        if (exists) return prev.map(j => j.id === event.id ? event.data : j);
-        return [...prev, event.data];
-      });
+      const data = event.data;
+
+      // Atualiza myJobs (jobs atribuídos a mim OU agendados)
+      const isMyJob = data?.provider_id === provider.id;
+      const isScheduledJob = data?.status === 'agendado';
+      if (isMyJob || isScheduledJob) {
+        setMyJobs(prev => {
+          if (event.type === 'delete') return prev.filter(j => j.id !== event.id);
+          const exists = prev.some(j => j.id === event.id);
+          if (exists) return prev.map(j => j.id === event.id ? data : j);
+          return [...prev, data];
+        });
+      }
+
+      // Atualiza requests disponíveis (apenas se online e aprovado)
+      if (provider?.is_online && provider?.is_approved) {
+        setRequests(prev => {
+          if (event.type === 'delete') return prev.filter(r => r.id !== event.id);
+          const isAvailable = data?.status === 'aguardando' && (!data?.provider_id || data?.provider_id !== provider.id);
+          if (!isAvailable) return prev.filter(r => r.id !== event.id);
+          const exists = prev.some(r => r.id === event.id);
+          if (exists) return prev.map(r => r.id === event.id ? data : r);
+          return [...prev, data];
+        });
+      }
     });
-    return unsub;
-  }, [provider?.id]);
+    return () => { cancelled = true; unsub(); };
+  }, [provider?.id, provider?.is_online, provider?.is_approved]);
 
   const toggleOnline = useMutation({
     mutationFn: (val) => {

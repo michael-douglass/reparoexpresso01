@@ -480,14 +480,11 @@ export default function SolicitarServico() {
   // Gera senhas e número de atendimento no frontend (backend functions indisponíveis no plano atual)
   const generatePassword = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-  const generateServiceNumber = async () => {
-    try {
-      const all = await base44.entities.ServiceRequest.list('-created_date', 1000);
-      const padded = String(all.length + 1).padStart(6, '0');
-      return `ATD-${padded}`;
-    } catch {
-      return `ATD-${Date.now().toString().slice(-6)}`;
-    }
+  const generateServiceNumber = () => {
+    // Gera número baseado em timestamp + random para evitar chamada API pesada
+    const ts = Date.now().toString().slice(-6);
+    const rand = Math.floor(Math.random() * 90 + 10);
+    return `ATD-${ts}${rand}`;
   };
 
   const createRequest = useMutation({
