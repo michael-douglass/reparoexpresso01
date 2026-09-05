@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
     ArrowLeft, MapPin, Zap, Droplets, Paintbrush, Wrench,
     Settings, Hammer, Lock, Wind, ChevronRight, Calendar,
-    Clock, Camera, X, Navigation, Loader2, Car, UserPlus, Monitor, Battery, Power, RotateCcw
+    Clock, Camera, X, Navigation, Loader2, Car, UserPlus, Monitor, Battery, Power, RotateCcw, Check, Plus
   } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
@@ -1436,47 +1436,69 @@ export default function SolicitarServico() {
 
               {/* Toggle: Peças no local */}
               {!isTow && (
-                <div className="mt-2 bg-green-50 border-2 border-green-200 rounded-2xl p-4 space-y-3">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.cliente_tem_peca}
-                      onChange={e => set('cliente_tem_peca', e.target.checked)}
-                      className="w-5 h-5 rounded accent-green-600 flex-shrink-0"
-                    />
-                    <div>
-                      <p className="text-sm font-bold text-green-800">✅ Já tenho as peças no local</p>
-                      <p className="text-xs text-green-700">Só preciso da mão de obra — serviço mais rápido</p>
+                <div className="mt-2 bg-[#E8F2FF] border-2 border-[#0066FF]/20 rounded-2xl p-4 space-y-3">
+                  <div
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={() => set('cliente_tem_peca', !form.cliente_tem_peca)}
+                  >
+                    <div className={cn(
+                      "w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                      form.cliente_tem_peca ? "bg-[#0066FF] border-[#0066FF]" : "border-gray-300 bg-white"
+                    )}>
+                      {form.cliente_tem_peca && <Check className="w-3.5 h-3.5 text-white" />}
                     </div>
-                  </label>
+                    <p className="text-sm font-bold text-foreground flex-1">Já tenho as peças no local</p>
+                    <div className={cn(
+                      "w-11 h-6 rounded-full flex items-center transition-colors flex-shrink-0",
+                      form.cliente_tem_peca ? "bg-[#28A745]" : "bg-gray-300"
+                    )}>
+                      <div className={cn(
+                        "w-5 h-5 bg-white rounded-full shadow transition-transform",
+                        form.cliente_tem_peca ? "translate-x-[22px]" : "translate-x-0.5"
+                      )} />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Marque se você já possui as peças prontas no local para agilizar o reparo</p>
+
                   {form.cliente_tem_peca && (
-                    <div className="space-y-2 border-t border-green-200 pt-3">
-                      <Label className="flex items-center gap-2 text-sm"><Camera className="w-4 h-4" /> Foto das peças *</Label>
-                      <p className="text-xs text-green-700">Tire uma foto das peças que você já comprou</p>
-                      <div className="flex flex-wrap gap-2">
-                        {form.foto_peca_cliente.map((url, idx) => (
-                          <div key={idx} className="relative">
-                            <div className="w-20 h-20 rounded-xl overflow-hidden border border-green-300 cursor-pointer" onClick={() => setLightboxSrc(url)}>
-                              <img src={url} alt="" className="w-full h-full object-cover" />
+                    <div className="space-y-3 border-t border-[#0066FF]/15 pt-3">
+                      {form.foto_peca_cliente.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {form.foto_peca_cliente.map((url, idx) => (
+                            <div key={idx} className="relative">
+                              <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-[#0066FF]/30 cursor-pointer" onClick={() => setLightboxSrc(url)}>
+                                <img src={url} alt="" className="w-full h-full object-cover" />
+                              </div>
+                              <button onClick={() => removePecaPhoto(idx)} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center">
+                                <X className="w-3 h-3 text-white" />
+                              </button>
                             </div>
-                            <button onClick={() => removePecaPhoto(idx)} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center">
-                              <X className="w-3 h-3 text-white" />
-                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {form.foto_peca_cliente.length < 3 && (
+                        <label className={cn("block cursor-pointer", uploadingPhotos && "opacity-50 pointer-events-none")}>
+                          <div className="border-2 border-dashed border-[#0066FF]/30 rounded-2xl p-4 space-y-2 hover:border-[#0066FF]/60 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <Camera className="w-5 h-5 text-[#0066FF]" />
+                              <p className="text-sm font-bold text-foreground">Foto da peça</p>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Adicione uma foto da peça que você já possui</p>
+                            <div className="border-2 border-dashed border-[#0066FF]/25 rounded-xl py-4 flex flex-col items-center gap-1">
+                              {uploadingPhotos
+                                ? <Loader2 className="w-6 h-6 text-[#0066FF] animate-spin" />
+                                : <div className="w-8 h-8 rounded-full bg-[#0066FF]/10 flex items-center justify-center"><Plus className="w-5 h-5 text-[#0066FF]" /></div>
+                              }
+                              <p className="text-xs font-semibold text-[#0066FF]">{uploadingPhotos ? "Enviando..." : "Adicionar foto da peça"}</p>
+                              <p className="text-[10px] text-muted-foreground">JPG, PNG • até 10MB • toque para adicionar</p>
+                            </div>
                           </div>
-                        ))}
-                        {form.foto_peca_cliente.length < 3 && (
-                          <label className={cn("flex flex-col items-center justify-center cursor-pointer", uploadingPhotos && "opacity-50 pointer-events-none")}>
-                            <div className="w-20 h-20 rounded-xl border-2 border-dashed border-green-300 flex flex-col items-center justify-center hover:border-green-500 transition-colors">
-                              {uploadingPhotos ? <Loader2 className="w-5 h-5 text-green-600 animate-spin" /> : <Camera className="w-6 h-6 text-green-600" />}
-                            </div>
-                            <span className="text-xs text-green-600 mt-1">{uploadingPhotos ? "..." : "Adicionar"}</span>
-                            <input type="file" accept="image/*" multiple className="hidden" onChange={handlePecaPhotoUpload} capture="environment" />
-                          </label>
-                        )}
-                      </div>
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={handlePecaPhotoUpload} capture="environment" />
+                        </label>
+                      )}
                       {form.foto_peca_cliente.length === 0 && (
                         <div className="bg-orange-50 border border-orange-200 rounded-xl p-2 text-xs text-orange-700">
-                          ⚠️ Foto das peças é obrigatória quando marcar esta opção
+                          ⚠️ Foto da peça é obrigatória para confirmar
                         </div>
                       )}
                     </div>
