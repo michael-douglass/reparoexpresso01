@@ -4,7 +4,7 @@ import { X, Phone, MapPin, Clock, AlertCircle, CheckCircle2, ZoomIn } from 'luci
 
 const TIMEOUT_SECONDS = 120; // 2 minutos para aceitar ou recusar
 
-export default function NewServiceFullscreenModal({ service, onAccept, onDecline }) {
+export default function NewServiceFullscreenModal({ service, onAccept, onDecline, onTimeout }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [timeLeft, setTimeLeft] = useState(TIMEOUT_SECONDS);
   const photos = service.problem_photos || [];
@@ -21,7 +21,7 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
     onDecline(service);
   };
 
-  // Timer regressivo — ao zerar, recusa automaticamente e repassa o serviço
+  // Timer regressivo — ao zerar, recusa automaticamente (sem pedir motivo) e repassa o serviço
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
@@ -29,7 +29,8 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
           clearInterval(interval);
           if (!declinedRef.current) {
             declinedRef.current = true;
-            onDecline(service);
+            // Timeout: recusa silenciosa, sem abrir modal de motivo
+            (onTimeout || onDecline)(service);
           }
           return 0;
         }
@@ -37,7 +38,7 @@ export default function NewServiceFullscreenModal({ service, onAccept, onDecline
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [service, onDecline]);
+  }, [service, onDecline, onTimeout]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;

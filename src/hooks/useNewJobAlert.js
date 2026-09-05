@@ -80,11 +80,64 @@ export function startHornLoop() {
   };
 }
 
+// === Expansão gradual do raio de busca ===
+// A cada 2 minutos o raio aumenta, alcançando prestadores mais distantes.
+// Raio baseado na idade do chamado (created_date), não em um timer global.
+const RADIUS_STEPS = [
+  { maxAgeMin: 2,       radiusKm: 5  },  // 0–2 min: 5 km
+  { maxAgeMin: 4,       radiusKm: 10 },  // 2–4 min: 10 km
+  { maxAgeMin: 6,       radiusKm: 15 },  // 4–6 min: 15 km
+  { maxAgeMin: 8,       radiusKm: 20 },  // 6–8 min: 20 km
+  { maxAgeMin: 10,      radiusKm: 30 },  // 8–10 min: 30 km
+  { maxAgeMin: Infinity, radiusKm: 50 }, // 10+ min: 50 km
+];
+
+function getRadiusForAge(ageMin) {
+  for (const step of RADIUS_STEPS) {
+    if (ageMin <= step.maxAgeMin) return step.radiusKm;
+  }
+  return 50;
+}
+
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function getJobAgeMinutes(job) {
+  if (!job.created_date) return 0;
+  return (Date.now() - new Date(job.created_date).getTime()) / 60000;
+}
+
+/**
+ * Verifica se o prestador está dentro do raio de busca atual para o chamado.
+ * Sem coordenadas do prestador ou do chamado → sempre true (fallback: notifica).
+ */
+function isWithinSearchRadius(job, providerLat, providerLng) {
+  if (!providerLat || !providerLng) return true; // sem coords do prestador → notifica
+  const jobLat = job.client_latitude || job.latitude;
+  const jobLng = job.client_longitude || job.longitude;
+  if (!jobLat || !jobLng) return true; // sem coords do chamado → notifica
+  const dist = getDistanceKm(providerLat, providerLng, jobLat, jobLng);
+  if (dist == null) return true;
+  const ageMin = getJobAgeMinutes(job);
+  const radius = getRadiusForAge(ageMin);
+  return dist <= radius;
+}
+
 /**
  * Monitora novos chamados via subscribe em tempo real.
  * Dispara a buzina quando:
  * - status='aguardando' (chamado livre) OU
  * - status='aceito' com provider_id === providerId (chamado atribuído automaticamente ao prestador)
+ *
+ * Raio de busca gradual: o chamado só é notificado se o prestador estiver dentro do
+ * raio atual (baseado na idade do chamado). Caso contrário, fica pendente e é
+ * re-avaliado a cada 30s conforme o raio expande.
  */
 // Persistência dos IDs vistos no sessionStorage para sobreviver à remontagem
 function loadSeenIds() {
@@ -99,15 +152,21 @@ function saveSeenIds(set) {
   } catch {}
 }
 
-export function useNewJobAlert({ enabled, onNewJob, providerId }) {
+export function useNewJobAlert({ enabled, onNewJob, providerId, providerLat, providerLng }) {
   const enabledRef = useRef(enabled);
   const providerIdRef = useRef(providerId);
+  const providerLatRef = useRef(providerLat);
+  const providerLngRef = useRef(providerLng);
   const seenIds = useRef(loadSeenIds()); // carrega do sessionStorage ao montar
   const onNewJobRef = useRef(onNewJob);
   const stopHornRef = useRef(null);
+  // Chamados que chegaram mas estavam fora do raio — re-avaliados conforme o raio expande
+  const pendingJobsRef = useRef(new Map()); // id -> job data
 
   useEffect(() => { enabledRef.current = enabled; }, [enabled]);
   useEffect(() => { providerIdRef.current = providerId; }, [providerId]);
+  useEffect(() => { providerLatRef.current = providerLat; }, [providerLat]);
+  useEffect(() => { providerLngRef.current = providerLng; }, [providerLng]);
   useEffect(() => { onNewJobRef.current = onNewJob; }, [onNewJob]);
 
   // Expõe funções globais para parar a buzina e limpar IDs vistos
@@ -119,10 +178,12 @@ export function useNewJobAlert({ enabled, onNewJob, providerId }) {
     window.__clearSeenJobIds = () => {
       seenIds.current.clear();
       saveSeenIds(seenIds.current);
+      pendingJobsRef.current.clear();
     };
     window.__markJobSeen = (id) => {
       seenIds.current.add(id);
       saveSeenIds(seenIds.current);
+      pendingJobsRef.current.delete(id);
     };
     return () => {
       delete window.__stopProviderHorn;
@@ -130,6 +191,16 @@ export function useNewJobAlert({ enabled, onNewJob, providerId }) {
       delete window.__markJobSeen;
     };
   }, []);
+
+  // Dispara a notificação de um job (buzina + callback) e marca como visto
+  const notifyJob = (data) => {
+    seenIds.current.add(data.id);
+    saveSeenIds(seenIds.current);
+    pendingJobsRef.current.delete(data.id);
+    stopHornRef.current?.();
+    stopHornRef.current = startHornLoop();
+    onNewJobRef.current?.(data);
+  };
 
   useEffect(() => {
     if (!enabled) {
@@ -166,21 +237,49 @@ export function useNewJobAlert({ enabled, onNewJob, providerId }) {
       if (isFinalizado) {
         seenIds.current.delete(event.id);
         saveSeenIds(seenIds.current);
+        pendingJobsRef.current.delete(event.id);
       }
 
       // Garante que job recusado (voltou a aguardando) não re-notifica quem já viu
       const isRejectedBack = event.type === 'update' && data.status === 'aguardando';
-      if (isRejectedBack) return;
+      if (isRejectedBack) {
+        // Prestadores que já viram o chamado (seenIds) não são re-notificados.
+        // Prestadores que estavam fora do raio (pending) continuam em pending
+        // e serão re-avaliados pelo intervalo de 30s conforme o raio expande.
+        return;
+      }
 
       if (isNewJob && !seenIds.current.has(event.id)) {
-        seenIds.current.add(event.id);
-        saveSeenIds(seenIds.current);
-        stopHornRef.current?.();
-        stopHornRef.current = startHornLoop();
-        onNewJobRef.current?.(data);
+        // Verifica raio de busca gradual
+        if (isWithinSearchRadius(data, providerLatRef.current, providerLngRef.current)) {
+          notifyJob(data);
+        } else {
+          // Fora do raio atual — guarda como pendente para re-avaliar quando o raio expandir
+          pendingJobsRef.current.set(event.id, data);
+        }
       }
     });
 
     return unsubscribe;
+  }, [enabled]);
+
+  // Re-avalia chamados pendentes a cada 30s — o raio expande com a idade do chamado
+  useEffect(() => {
+    if (!enabled) return;
+    const interval = setInterval(() => {
+      if (pendingJobsRef.current.size === 0) return;
+      for (const [id, job] of pendingJobsRef.current) {
+        // Se já foi visto ou finalizado, remove
+        if (seenIds.current.has(id)) {
+          pendingJobsRef.current.delete(id);
+          continue;
+        }
+        // Re-avalia com o raio expandido
+        if (isWithinSearchRadius(job, providerLatRef.current, providerLngRef.current)) {
+          notifyJob(job);
+        }
+      }
+    }, 30000); // a cada 30s
+    return () => clearInterval(interval);
   }, [enabled]);
 }

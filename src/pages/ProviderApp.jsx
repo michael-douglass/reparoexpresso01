@@ -94,6 +94,7 @@ export default function ProviderApp() {
   const incomingJob = jobQueue[0] || null;
 
   // Hook para novos chamados — dispara modal fullscreen
+  // Raio de busca gradual: começa em 5km e expande a cada 2 min
   useNewJobAlert({
     enabled: !!(provider?.is_online && provider?.is_approved),
     onNewJob: (newJob) => {
@@ -101,6 +102,8 @@ export default function ProviderApp() {
       setFullscreenService(newJob);
     },
     providerId: provider?.id,
+    providerLat: provider?.latitude,
+    providerLng: provider?.longitude,
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Registra Web Push para notificações com tela bloqueada
@@ -525,6 +528,19 @@ export default function ProviderApp() {
           onDecline={() => {
             setFullscreenService(null);
             handleDeclineBanner(fullscreenService);
+          }}
+          onTimeout={() => {
+            // Timeout: recusa silenciosa e repassa o chamado a outro prestador
+            setFullscreenService(null);
+            setJobQueue(prev => prev.filter(j => j.id !== fullscreenService?.id));
+            setRequests(prev => prev.filter(r => r.id !== fullscreenService?.id));
+            base44.entities.ServiceRequest.update(fullscreenService.id, {
+              status: 'aguardando',
+              provider_id: null,
+              provider_name: null,
+              provider_phone: null,
+            });
+            toast.info("Tempo esgotado — chamado repassado a outro prestador.");
           }}
         />
       )}
