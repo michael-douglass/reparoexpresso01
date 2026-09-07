@@ -16,6 +16,7 @@ import NotificationPermissionBanner from '../components/NotificationPermissionBa
 import SatisfactionSurveyModal from '../components/SatisfactionSurveyModal';
 import TipRequestModal from '../components/TipRequestModal';
 import WarrantyBadge from '../components/WarrantyBadge';
+import SearchingProviderActions from '../components/SearchingProviderActions';
 
 import BatchProvidersPanel from '../components/BatchProvidersPanel';
 import BatchProviderChat from '../components/BatchProviderChat';
@@ -459,6 +460,10 @@ export default function AcompanharServico() {
               🚗 Prestador a ~{request.estimated_arrival_minutes} min de você
             </div>
           )}
+          {/* Opções do cliente durante a busca */}
+          <div className="mt-5 text-left">
+            <SearchingProviderActions request={request} onCancel={() => cancelRequest.mutate()} />
+          </div>
         </div>
       )}
 
@@ -574,7 +579,7 @@ export default function AcompanharServico() {
         </div>
       )}
 
-      {['aguardando', 'aceito', 'a_caminho'].includes(request.status) && (() => {
+      {['aceito', 'a_caminho'].includes(request.status) && (() => {
         // Para serviços agendados, só permite cancelar até 30 min antes do horário
         if (request.modality === 'agendado' && request.scheduled_date && request.scheduled_time) {
           const scheduledDateTime = new Date(`${request.scheduled_date}T${request.scheduled_time}`);
