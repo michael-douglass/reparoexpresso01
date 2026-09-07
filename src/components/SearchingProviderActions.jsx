@@ -6,13 +6,12 @@ import { Label } from '@/components/ui/label';
 import { RefreshCw, Calendar, X, Clock, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function SearchingProviderActions({ request, onCancel, providerPhoto, providerName }) {
+export default function SearchingProviderActions({ request, onCancel }) {
   const [showSchedule, setShowSchedule] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
-  const hasProvider = !!(providerName || request?.provider_name);
 
   const handleSearchAnother = async () => {
     setIsSearching(true);
@@ -116,23 +115,6 @@ export default function SearchingProviderActions({ request, onCancel, providerPh
 
   return (
     <div className="space-y-3">
-      {/* Foto do prestador encontrado */}
-      {hasProvider && (
-        <div className="flex items-center gap-3 bg-card rounded-2xl p-3 border border-primary/20">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {providerPhoto
-              ? <img src={providerPhoto} alt={providerName || request?.provider_name} className="w-full h-full object-cover" />
-              : <span className="text-xl font-bold text-primary">{(providerName || request?.provider_name || '?').charAt(0)}</span>
-            }
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground font-semibold">Prestador encontrado</p>
-            <p className="font-bold text-foreground truncate">{providerName || request?.provider_name}</p>
-          </div>
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
-        </div>
-      )}
-
       {/* Botão: Procurar outro prestador */}
       <Button
         variant="outline"

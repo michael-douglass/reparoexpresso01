@@ -324,18 +324,6 @@ export default function AcompanharServico() {
         </div>
       )}
 
-      {/* Opções do cliente quando prestador é encontrado (aceito) */}
-      {request.status === 'aceito' && request.provider_name && (
-        <div className="mb-4">
-          <SearchingProviderActions
-            request={request}
-            providerPhoto={request.provider_id ? providerPhotos[request.provider_id] : null}
-            providerName={request.provider_name}
-            onCancel={() => cancelRequest.mutate()}
-          />
-        </div>
-      )}
-
       {/* Progress Stepper */}
       {request.status !== 'cancelado' && request.status !== 'aguardando' && (
         <div className="mb-3">
@@ -591,7 +579,7 @@ export default function AcompanharServico() {
         </div>
       )}
 
-      {request.status === 'a_caminho' && (() => {
+      {['aceito', 'a_caminho'].includes(request.status) && (() => {
         // Para serviços agendados, só permite cancelar até 30 min antes do horário
         if (request.modality === 'agendado' && request.scheduled_date && request.scheduled_time) {
           const scheduledDateTime = new Date(`${request.scheduled_date}T${request.scheduled_time}`);
