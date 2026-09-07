@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { ArrowLeft, TrendingUp, Clock, CheckCircle2, DollarSign, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import ProviderFinancialPanel from '../components/ProviderFinancialPanel';
 
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -116,58 +117,10 @@ export default function ProviderEarnings() {
         <p className="text-muted-foreground">Visualize seus ganhos e performance</p>
       </motion.div>
 
-      {/* KPI Cards */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ staggerChildren: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-      >
-        {/* Total Earnings */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" /> Ganhos Totais
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-primary">R$ {totalEarnings.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground mt-1">{completedServices.length} serviços</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Confirmed Earnings */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <Card className="bg-gradient-to-br from-green-50 to-green-50/50 border-green-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-green-900 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" /> Confirmado
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-green-600">R$ {confirmedEarnings.toFixed(2)}</p>
-              <p className="text-xs text-green-700 mt-1">Pronto para saque</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Pending Earnings */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-50/50 border-yellow-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-yellow-900 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-600" /> Pendente
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-yellow-600">R$ {pendingEarnings.toFixed(2)}</p>
-              <p className="text-xs text-yellow-700 mt-1">Aguardando processamento</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </motion.div>
+      {/* Painel Financeiro — dados reais da carteira */}
+      <div className="mb-8">
+        <ProviderFinancialPanel providerId={provider.id} providerName={provider.name} />
+      </div>
 
       {/* Charts Section */}
       <motion.div
