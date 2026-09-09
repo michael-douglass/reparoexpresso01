@@ -11,6 +11,7 @@ import PaymentModal from "@/components/PaymentModal";
 import AvailableScheduleSelector from "@/components/AvailableScheduleSelector";
 import FleetMap from "@/components/FleetMap";
 import ServiceSearch from "@/components/ServiceSearch";
+import { withRateLimitRetry } from "@/lib/apiRetry";
 
 const homeServices = [
   { icon: Zap, label: "Elétrica", subtitle: "Chuveiro, tomada, QDC", type: "eletrica", color: "bg-amber-500/15 text-amber-400" },
@@ -95,9 +96,9 @@ export default function Home() {
   useEffect(() => {
     if (!user?.email) return;
     const loadActive = () =>
-      base44.entities.ServiceRequest.filter({ created_by: user.email }).then(all =>
+      withRateLimitRetry(() => base44.entities.ServiceRequest.filter({ created_by: user.email })).then(all =>
         setActiveRequests(all.filter(r => !['concluido', 'cancelado'].includes(r.status)))
-      );
+      ).catch(() => {});
     loadActive();
     const unsub = base44.entities.ServiceRequest.subscribe((event) => {
       if (event.data?.created_by !== user.email) return;

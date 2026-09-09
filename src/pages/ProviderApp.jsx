@@ -122,17 +122,18 @@ export default function ProviderApp() {
     // Carga inicial sequencial para evitar rate limit
     const loadInitial = async () => {
       try {
+        const { withRateLimitRetry } = await import('@/lib/apiRetry');
         // 1. Meus jobs (atribuídos + agendados) — uma chamada que cobre ambos
-        const myAssigned = await base44.entities.ServiceRequest.filter({ provider_id: provider.id }, '-created_date', 100);
+        const myAssigned = await withRateLimitRetry(() => base44.entities.ServiceRequest.filter({ provider_id: provider.id }, '-created_date', 100));
         if (cancelled) return;
-        const scheduled = await base44.entities.ServiceRequest.filter({ status: 'agendado' }, '-created_date', 50);
+        const scheduled = await withRateLimitRetry(() => base44.entities.ServiceRequest.filter({ status: 'agendado' }, '-created_date', 50));
         if (cancelled) return;
         const combined = [...myAssigned, ...scheduled.filter(s => s.provider_id !== provider.id)];
         setMyJobs(combined);
 
         // 2. Chamados disponíveis (apenas se online e aprovado)
         if (provider?.is_online && provider?.is_approved) {
-          const available = await base44.entities.ServiceRequest.filter({ status: 'aguardando' });
+          const available = await withRateLimitRetry(() => base44.entities.ServiceRequest.filter({ status: 'aguardando' }));
           if (cancelled) return;
           setRequests(available.filter(r => !r.provider_id || r.provider_id !== provider.id));
         }
