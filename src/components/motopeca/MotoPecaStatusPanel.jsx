@@ -128,29 +128,42 @@ export default function MotoPecaStatusPanel({ service, onUpdate }) {
         </div>
       </div>
 
-      {/* Footer — próxima ação */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-4 py-3 bg-card border-t border-border">
+      {/* Footer — botões de ação do motoboy */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-4 py-2.5 bg-card border-t border-border space-y-1.5 max-h-[60vh] overflow-y-auto">
         {currentStep?.next ? (
-          <button
-            onClick={advance}
-            disabled={updating}
-            className={cn(
-              "w-full rounded-2xl h-14 py-3.5 font-bold text-base gap-2 flex items-center justify-center transition-colors",
-              currentStep.next === 'peca_entregue'
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-primary hover:bg-primary/90 text-primary-foreground"
-            )}
-          >
-            {updating ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-              <>
-                {currentStep.next === 'peca_entregue' && <CheckCircle2 className="w-5 h-5" />}
-                {currentStep.nextLabel}
-              </>
-            )}
-          </button>
+          PECA_STEPS.filter(s => s.next).map(step => {
+            const stepIdx = PECA_STEPS.findIndex(s => s.key === step.key);
+            const isDone = stepIdx < currentIdx;
+            const isCurrent = stepIdx === currentIdx;
+            const isFuture = stepIdx > currentIdx;
+            const isLast = step.next === 'peca_entregue';
+            const Icon = step.icon;
+            return (
+              <button
+                key={step.key}
+                onClick={isCurrent ? advance : undefined}
+                disabled={!isCurrent || updating}
+                className={cn(
+                  "w-full rounded-xl h-11 px-4 font-bold text-sm gap-2 flex items-center justify-center transition-colors",
+                  isCurrent && isLast && "bg-green-600 hover:bg-green-700 text-white",
+                  isCurrent && !isLast && "bg-primary hover:bg-primary/90 text-primary-foreground",
+                  isDone && "bg-green-100 text-green-700",
+                  isFuture && "bg-muted text-muted-foreground cursor-not-allowed"
+                )}
+              >
+                {isCurrent && updating ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                  <>
+                    {isDone ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                    <span>{isDone ? step.label : step.nextLabel}</span>
+                    {isFuture && <span className="text-[11px] font-normal opacity-70">• em breve</span>}
+                  </>
+                )}
+              </button>
+            );
+          })
         ) : (
-          <div className="w-full rounded-2xl h-14 py-3.5 bg-green-100 text-green-700 font-bold text-base flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="w-full rounded-xl h-11 py-2.5 bg-green-100 text-green-700 font-bold text-sm flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
             Entrega concluída
           </div>
         )}
