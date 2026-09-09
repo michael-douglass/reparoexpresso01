@@ -288,11 +288,11 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
               {/* Prestador */}
               <div className="bg-white/60 rounded-xl p-2.5 space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Prestador da OS</p>
-                <div className="flex items-center gap-2 text-xs text-foreground">
+                <div className="flex items-center gap-2 text-xs text-black">
                   <User className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                   <span className="font-semibold">{selectedOs.provider_name || 'Não informado'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-foreground">
+                <div className="flex items-center gap-2 text-xs text-black">
                   <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                   <span>{selectedOs.provider_phone || 'Telefone não disponível'}</span>
                 </div>
@@ -301,7 +301,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
               {/* Serviço */}
               <div className="bg-white/60 rounded-xl p-2.5 space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Serviço</p>
-                <div className="flex items-start gap-2 text-xs text-foreground">
+                <div className="flex items-start gap-2 text-xs text-black">
                   <Wrench className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <span className="line-clamp-2">{selectedOs.description || 'Sem descrição'}</span>
                 </div>
@@ -310,7 +310,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
               {/* Endereço */}
               <div className="bg-white/60 rounded-xl p-2.5 space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Endereço</p>
-                <div className="flex items-start gap-2 text-xs text-foreground">
+                <div className="flex items-start gap-2 text-xs text-black">
                   <MapPinned className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <span>
                     {selectedOs.address || '—'}{selectedOs.number ? `, ${selectedOs.number}` : ''}
