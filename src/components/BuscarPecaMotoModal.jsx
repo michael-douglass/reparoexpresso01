@@ -99,6 +99,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
       valorEstimado: valorEstimado ? Number(valorEstimado) : null,
       os_number: osRef,
       os_id: selectedOs.id,
+      provider_id: selectedOs.provider_id,
       provider_name: selectedOs.provider_name,
       provider_phone: selectedOs.provider_phone,
     });

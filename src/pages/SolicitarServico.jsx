@@ -119,6 +119,8 @@ export default function SolicitarServico() {
   const [showOutrosModal, setShowOutrosModal] = useState(false);
   const [showBuscarPecaMotoModal, setShowBuscarPecaMotoModal] = useState(false);
   const [pecaOsId, setPecaOsId] = useState(null);
+  const [pecaProviderId, setPecaProviderId] = useState(null);
+  const [pecaOsNumber, setPecaOsNumber] = useState(null);
   const [showSubstituicaoTelhaModal, setShowSubstituicaoTelhaModal] = useState(false);
   const [substituicaoTelhaTipo, setSubstituicaoTelhaTipo] = useState(null);
   const [towQuestions, setTowQuestions] = useState({});
@@ -572,9 +574,21 @@ export default function SolicitarServico() {
         });
       }
 
-      // Marca a OS de origem como "peça solicitada" quando o cliente cria um buscar_peca_moto
+      // Marca a OS de origem e notifica o prestador quando o cliente cria um buscar_peca_moto
       if (serviceTypes.includes('buscar_peca_moto') && pecaOsId) {
         await base44.entities.ServiceRequest.update(pecaOsId, { peca_solicitada: true }).catch(() => {});
+        if (pecaProviderId) {
+          const etaMinutes = 60;
+          const etaStr = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          await base44.entities.ProviderNotification.create({
+            provider_id: pecaProviderId,
+            type: 'peca_solicitada',
+            title: 'Compra de peça iniciada (Moto Peça)',
+            message: `O cliente solicitou a busca de peça por moto para o atendimento ${pecaOsNumber || ''}. A compra foi iniciada — previsão de chegada da peça no endereço do cliente: ~${etaMinutes} min (aprox. ${etaStr}).`,
+            action_url: '/prestador',
+            is_read: false,
+          }).catch(() => {});
+        }
       }
 
       return results[0];
@@ -1301,6 +1315,8 @@ export default function SolicitarServico() {
               onSelect={(data) => {
                 set('service_type', [...form.service_type, 'buscar_peca_moto']);
                 setPecaOsId(data.os_id);
+                setPecaProviderId(data.provider_id);
+                setPecaOsNumber(data.os_number);
                 setDescriptionsPerService(prev => ({
                   ...prev,
                   buscar_peca_moto: {
