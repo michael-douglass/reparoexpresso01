@@ -642,6 +642,14 @@ export default function AcompanharServico() {
         );
       })()}
 
+      {/* Cliente visualizando o próprio OS do Moto Peça — mostra o tracking */}
+      {request.service_type === 'buscar_peca_moto' && (() => {
+        const originalRequest = allRequests.find(r => r.id === request.peca_origem_os_id) || null;
+        return (
+          <MotoPecaTrackingCard originalRequest={originalRequest || request} motoPecaOs={request} />
+        );
+      })()}
+
       {request.status === 'em_espera' && (() => {
         // Mostra prazo de 15 dias para retorno por peça
         const createdAt = request.created_date ? new Date(request.created_date) : null;
