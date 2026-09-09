@@ -220,7 +220,7 @@ export default function BusyAlertBanner({ provider }) {
                        <button
                          key={m}
                          onClick={() => setFinishMinutes(String(m))}
-                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${finishMinutes === String(m) ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-border text-foreground'}`}
+                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${finishMinutes === String(m) ? 'border-orange-500 bg-orange-50 text-black' : 'border-border text-black'}`}
                        >
                          {m} min
                        </button>
