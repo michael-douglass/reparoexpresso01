@@ -178,6 +178,14 @@ export default function MeusPedidos() {
                           )}
                         </div>
 
+                        {req.status === 'em_espera' && !req.peca_solicitada && (
+                          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                            <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                            <span className="text-xs font-semibold text-amber-700">
+                              Aguardando peça — solicite a busca por moto{req.parts_return_deadline ? ` até ${new Date(req.parts_return_deadline).toLocaleDateString('pt-BR')}` : ''}
+                            </span>
+                          </div>
+                        )}
                         {req.peca_solicitada && (
                           <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
                             <Package className="w-4 h-4 text-emerald-600 flex-shrink-0" />
