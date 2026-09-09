@@ -29,8 +29,6 @@ const AUTHORIZATION_ITEMS = [
 export default function ServiceChecklist({ job, onClose }) {
   const [checkedItems, setCheckedItems] = useState({});
   const [authorizationItems, setAuthorizationItems] = useState({});
-  const [photos, setPhotos] = useState([]);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [videos, setVideos] = useState([]);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [location, setLocation] = useState(null);
@@ -58,21 +56,6 @@ export default function ServiceChecklist({ job, onClose }) {
 
   const toggleAuthorizationItem = (item) => {
     setAuthorizationItems(prev => ({ ...prev, [item]: !prev[item] }));
-  };
-
-  const handlePhotoUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    setUploadingPhoto(true);
-    const urls = await Promise.all(
-      files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url))
-    );
-    setPhotos(prev => [...prev, ...urls]);
-    setUploadingPhoto(false);
-  };
-
-  const removePhoto = (idx) => {
-    setPhotos(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleVideoUpload = async (e) => {
@@ -155,7 +138,6 @@ export default function ServiceChecklist({ job, onClose }) {
     const checklistData = {
       items: DEFAULT_ITEMS.map(item => ({ label: item, checked: !!checkedItems[item] })),
       authorizations: AUTHORIZATION_ITEMS.map(item => ({ label: item, checked: !!authorizationItems[item] })),
-      photos,
       videos,
       notes,
       pre_auth_description: preAuthDescription,
@@ -380,36 +362,6 @@ export default function ServiceChecklist({ job, onClose }) {
                 )}
               </div>
             </button>
-          </div>
-
-          {/* Fotos */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-foreground">Fotos do serviço</p>
-            <div className="flex flex-wrap gap-2">
-              {photos.map((url, idx) => (
-                <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-border">
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => removePhoto(idx)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center"
-                  >
-                    <X className="w-3.5 h-3.5 text-white" />
-                  </button>
-                </div>
-              ))}
-              {photos.length < 8 && (
-                <label className={cn(
-                  "w-24 h-24 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors",
-                  uploadingPhoto && "opacity-50 pointer-events-none"
-                )}>
-                  {uploadingPhoto
-                    ? <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-                    : <><Plus className="w-6 h-6 text-muted-foreground" /><span className="text-xs text-muted-foreground mt-1">Foto</span></>}
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} capture="environment" />
-                </label>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">Fotografe o antes, durante e depois do serviço (máx. 8)</p>
           </div>
 
           {/* Vídeos */}
