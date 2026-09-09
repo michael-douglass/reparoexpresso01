@@ -10,6 +10,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
   const [osError, setOsError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOs, setSelectedOs] = useState(null);
+  const [showOsPicker, setShowOsPicker] = useState(false);
   const [pecas, setPecas] = useState('');
   const [loja, setLoja] = useState('');
   const [lojaOutra, setLojaOutra] = useState(false);
@@ -137,74 +138,133 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
             Selecione o atendimento em que o prestador solicitou a peça. O motoby poderá contatá-lo em caso de dúvidas.
           </p>
 
-          {/* Campo de busca */}
-          <div className="relative">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Buscar por número, prestador ou serviço..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full h-11 pl-9 pr-3 rounded-xl border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
-          </div>
+          {/* Botão para abrir a janela de seleção */}
+          {!selectedOs && (
+            <button
+              onClick={() => setShowOsPicker(true)}
+              disabled={osLoading}
+              className={cn(
+                "w-full flex items-center justify-between p-4 rounded-2xl border-2 border-dashed transition-all",
+                "border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary",
+                osLoading && "opacity-60 pointer-events-none"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                {osLoading ? (
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                    <Search className="w-5 h-5 text-primary" />
+                  </div>
+                )}
+                <div className="text-left">
+                  <p className="text-sm font-bold text-foreground">
+                    {osLoading ? 'Carregando...' : 'Selecionar atendimento'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {osLoading
+                      ? 'Buscando serviços pendentes de peça...'
+                      : `${osList.length} serviço(s) pendente(s) de peça — toque para ver`}
+                  </p>
+                </div>
+              </div>
+              {!osLoading && <ChevronRight className="w-5 h-5 text-primary flex-shrink-0" />}
+            </button>
+          )}
 
-          {osError && (
+          {osError && !showOsPicker && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-2 text-xs text-red-700">
               {osError}
             </div>
           )}
 
-          {/* Lista de OSs */}
-          {osLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 text-primary animate-spin" />
-              <span className="text-xs text-muted-foreground ml-2">Carregando atendimentos...</span>
-            </div>
-          ) : filteredOs.length === 0 && !osError ? (
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-700 text-center">
-              {osList.length === 0
-                ? 'Nenhum atendimento com prazo ativo para compra de peça no momento.'
-                : 'Nenhum atendimento encontrado para a busca.'}
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {filteredOs.map(os => (
-                <button
-                  key={os.id}
-                  onClick={() => setSelectedOs(os)}
-                  className={cn(
-                    "w-full text-left p-3 rounded-xl border-2 transition-all",
-                    selectedOs?.id === os.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/40"
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-foreground">{os.service_number || 'Sem número'}</span>
-                        <span className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-1",
-                          "bg-amber-100 text-amber-700"
-                        )}>
-                          <Clock className="w-2.5 h-2.5" />
-                          {formatDeadline(os.parts_return_deadline)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                        <User className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{os.provider_name || 'Prestador não informado'}</span>
-                      </div>
-                      <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                        <Wrench className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                        <span className="line-clamp-1">{os.description || 'Sem descrição'}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+          {/* Janela dedicada de seleção de OS */}
+          {showOsPicker && (
+            <div className="fixed inset-0 z-[60] flex items-end sm:items-center sm:justify-center bg-black/60" onClick={() => setShowOsPicker(false)}>
+              <div
+                className="bg-card w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-border">
+                  <div>
+                    <h4 className="text-base font-bold text-foreground">Atendimentos pendentes de peça</h4>
+                    <p className="text-xs text-muted-foreground">Selecione o atendimento de origem</p>
                   </div>
-                </button>
-              ))}
+                  <button onClick={() => setShowOsPicker(false)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+
+                {/* Busca */}
+                <div className="p-4 pb-2">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Buscar por número, prestador ou serviço..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="w-full h-11 pl-9 pr-3 rounded-xl border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                  </div>
+                </div>
+
+                {/* Lista */}
+                <div className="flex-1 overflow-y-auto px-4 pb-4">
+                  {osLoading ? (
+                    <div className="flex items-center justify-center py-10">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                      <span className="text-sm text-muted-foreground ml-2">Carregando atendimentos...</span>
+                    </div>
+                  ) : osError ? (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700 text-center">
+                      {osError}
+                    </div>
+                  ) : filteredOs.length === 0 ? (
+                    <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-orange-700 text-center">
+                      {osList.length === 0
+                        ? 'Nenhum atendimento com prazo ativo para compra de peça no momento.'
+                        : 'Nenhum atendimento encontrado para a busca.'}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredOs.map(os => (
+                        <button
+                          key={os.id}
+                          onClick={() => { setSelectedOs(os); setShowOsPicker(false); setSearchTerm(''); }}
+                          className={cn(
+                            "w-full text-left p-3 rounded-xl border-2 transition-all",
+                            "border-border hover:border-primary/40 hover:bg-primary/5"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-bold text-foreground">{os.service_number || 'Sem número'}</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-1 bg-amber-100 text-amber-700">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  {formatDeadline(os.parts_return_deadline)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                                <User className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{os.provider_name || 'Prestador não informado'}</span>
+                              </div>
+                              <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                                <Wrench className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                                <span className="line-clamp-1">{os.description || 'Sem descrição'}</span>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
