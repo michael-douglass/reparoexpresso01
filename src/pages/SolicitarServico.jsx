@@ -55,6 +55,13 @@ export default function SolicitarServico() {
     base44.auth.me().then(u => { setCurrentUser(u); setUserLoaded(true); }).catch(() => setUserLoaded(true));
   }, []);
 
+  useEffect(() => {
+    if (urlParams.get('abrir_moto_peca') === '1') {
+      setShowBuscarPecaMotoModal(true);
+      setPecaPreselectOsId(urlParams.get('os'));
+    }
+  }, []);
+
   const { data: clientProfile, isLoading: clientLoading } = useQuery({
     queryKey: ['client-profile', currentUser?.id],
     queryFn: () => base44.entities.Client.filter({ user_id: currentUser.id }),
@@ -121,6 +128,7 @@ export default function SolicitarServico() {
   const [pecaOsId, setPecaOsId] = useState(null);
   const [pecaProviderId, setPecaProviderId] = useState(null);
   const [pecaOsNumber, setPecaOsNumber] = useState(null);
+  const [pecaPreselectOsId, setPecaPreselectOsId] = useState(null);
   const [showSubstituicaoTelhaModal, setShowSubstituicaoTelhaModal] = useState(false);
   const [substituicaoTelhaTipo, setSubstituicaoTelhaTipo] = useState(null);
   const [towQuestions, setTowQuestions] = useState({});
@@ -1311,6 +1319,7 @@ export default function SolicitarServico() {
           {showBuscarPecaMotoModal && (
             <BuscarPecaMotoModal
               isOpen={showBuscarPecaMotoModal}
+              preselectOsId={pecaPreselectOsId}
               onCancel={() => setShowBuscarPecaMotoModal(false)}
               onSelect={(data) => {
                 set('service_type', [...form.service_type, 'buscar_peca_moto']);

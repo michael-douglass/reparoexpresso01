@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 
-export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
+export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, preselectOsId }) {
   const [osList, setOsList] = useState([]);
   const [osLoading, setOsLoading] = useState(false);
   const [osError, setOsError] = useState('');
@@ -37,6 +37,10 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
           return new Date(os.parts_return_deadline) >= now;
         });
         setOsList(valid);
+        if (preselectOsId) {
+          const match = valid.find(os => os.id === preselectOsId);
+          if (match && !cancelled) setSelectedOs(match);
+        }
       } catch (e) {
         if (!cancelled) setOsError('Erro ao carregar atendimentos. Tente novamente.');
       } finally {
@@ -45,7 +49,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
     };
     loadOs();
     return () => { cancelled = true; };
-  }, [isOpen]);
+  }, [isOpen, preselectOsId]);
 
   const lojasSugeridas = [
     'Loja mais próxima (motoboy escolhe)',

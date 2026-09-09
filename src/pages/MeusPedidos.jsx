@@ -179,11 +179,17 @@ export default function MeusPedidos() {
                         </div>
 
                         {req.status === 'em_espera' && !req.peca_solicitada && (
-                          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(`/solicitar?abrir_moto_peca=1&os=${req.id}`); }}
+                            className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-amber-100 transition-colors"
+                          >
                             <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
                             <span className="text-xs font-semibold text-amber-700">
-                              Aguardando peça — solicite a busca por moto{req.parts_return_deadline ? ` até ${new Date(req.parts_return_deadline).toLocaleDateString('pt-BR')}` : ''}
+                              Aguardando peça — toque para solicitar a busca por moto{req.parts_return_deadline ? ` até ${new Date(req.parts_return_deadline).toLocaleDateString('pt-BR')}` : ''}
                             </span>
+                            <ChevronRight className="w-3.5 h-3.5 text-amber-600 ml-auto" />
                           </div>
                         )}
                         {req.peca_solicitada && (
