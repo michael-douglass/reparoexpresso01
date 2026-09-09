@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { Bike, MapPin, Store, DollarSign, Camera, X, Loader2, Info, Search, Phone, User, Wrench, MapPinned } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Bike, Store, DollarSign, Camera, X, Loader2, Info, Search, Phone, User, Wrench, MapPinned, Clock, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 
 export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
-  const [osNumber, setOsNumber] = useState('');
-  const [osData, setOsData] = useState(null);
+  const [osList, setOsList] = useState([]);
   const [osLoading, setOsLoading] = useState(false);
   const [osError, setOsError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOs, setSelectedOs] = useState(null);
   const [pecas, setPecas] = useState('');
   const [loja, setLoja] = useState('');
   const [lojaOutra, setLojaOutra] = useState(false);
@@ -16,38 +17,52 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
   const [fotos, setFotos] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    const loadOs = async () => {
+      setOsLoading(true);
+      setOsError('');
+      try {
+        const me = await base44.auth.me();
+        const results = await base44.entities.ServiceRequest.filter({
+          client_id: me.id,
+          status: 'em_espera',
+        }, '-updated_date', 50);
+        if (cancelled) return;
+        const now = new Date();
+        const valid = (results || []).filter(os => {
+          if (!os.parts_return_deadline) return true;
+          return new Date(os.parts_return_deadline) >= now;
+        });
+        setOsList(valid);
+      } catch (e) {
+        if (!cancelled) setOsError('Erro ao carregar atendimentos. Tente novamente.');
+      } finally {
+        if (!cancelled) setOsLoading(false);
+      }
+    };
+    loadOs();
+    return () => { cancelled = true; };
+  }, [isOpen]);
 
   const lojasSugeridas = [
     'Loja mais próxima (motoboy escolhe)',
     'Loja específica (informar endereço)',
   ];
 
-  const normalizeOs = (val) => val.trim().toUpperCase().replace(/\s/g, '');
+  const filteredOs = useMemo(() => {
+    if (!searchTerm.trim()) return osList;
+    const term = searchTerm.trim().toLowerCase();
+    return osList.filter(os =>
+      (os.service_number || '').toLowerCase().includes(term) ||
+      (os.provider_name || '').toLowerCase().includes(term) ||
+      (os.description || '').toLowerCase().includes(term) ||
+      (os.service_type || '').toLowerCase().includes(term)
+    );
+  }, [osList, searchTerm]);
 
-  const handleOsLookup = async () => {
-    const norm = normalizeOs(osNumber);
-    if (norm.length < 4) {
-      setOsError('Digite o número da OS (ex: ATD-000123)');
-      setOsData(null);
-      return;
-    }
-    setOsLoading(true);
-    setOsError('');
-    setOsData(null);
-    try {
-      const results = await base44.entities.ServiceRequest.filter({ service_number: norm });
-      if (results && results.length > 0) {
-        setOsData(results[0]);
-      } else {
-        setOsError('OS não encontrada. Verifique o número informado.');
-      }
-    } catch (e) {
-      setOsError('Erro ao buscar a OS. Tente novamente.');
-    } finally {
-      setOsLoading(false);
-    }
-  };
+  if (!isOpen) return null;
 
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -60,22 +75,31 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
 
   const removePhoto = (idx) => setFotos(prev => prev.filter((_, i) => i !== idx));
 
-  const canConfirm = pecas.trim().length > 3 && fotos.length >= 1 && osData;
+  const canConfirm = pecas.trim().length > 3 && fotos.length >= 1 && selectedOs;
+
+  const formatDeadline = (deadline) => {
+    if (!deadline) return 'Sem prazo';
+    const diff = new Date(deadline) - new Date();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days <= 0) return 'Vence hoje';
+    if (days === 1) return 'Vence amanhã';
+    return `Faltam ${days} dias`;
+  };
 
   const handleConfirm = () => {
     if (!canConfirm) return;
     const lojaFinal = loja === 'Loja específica (informar endereço)' ? lojaOutra : loja;
-    const osRef = osData.service_number || osData.id;
-    const desc = `Busca de peça por moto — OS de origem: ${osRef}. Peças: ${pecas}.${lojaFinal ? ` Loja: ${lojaFinal}.` : ''}${valorEstimado ? ` Valor estimado das peças: R$ ${valorEstimado}.` : ''} O motoby busca as peças e entrega no local do cliente. Prestador da OS: ${osData.provider_name || 'N/A'} (tel: ${osData.provider_phone || 'N/A'}).`;
+    const osRef = selectedOs.service_number || selectedOs.id;
+    const desc = `Busca de peça por moto — OS de origem: ${osRef}. Peças: ${pecas}.${lojaFinal ? ` Loja: ${lojaFinal}.` : ''}${valorEstimado ? ` Valor estimado das peças: R$ ${valorEstimado}.` : ''} O motoby busca as peças e entrega no local do cliente. Prestador da OS: ${selectedOs.provider_name || 'N/A'} (tel: ${selectedOs.provider_phone || 'N/A'}).`;
     onSelect({
       description: desc,
       photos: fotos,
       loja: lojaFinal,
       valorEstimado: valorEstimado ? Number(valorEstimado) : null,
       os_number: osRef,
-      os_id: osData.id,
-      provider_name: osData.provider_name,
-      provider_phone: osData.provider_phone,
+      os_id: selectedOs.id,
+      provider_name: selectedOs.provider_name,
+      provider_phone: selectedOs.provider_phone,
     });
   };
 
@@ -104,52 +128,101 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
           </p>
         </div>
 
-        {/* Número da OS de origem */}
+        {/* Seleção da OS de origem */}
         <div className="space-y-2 mb-4">
           <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Search className="w-4 h-4" /> Número da OS do prestador *
+            <Search className="w-4 h-4" /> Atendimento com prazo para compra de peça *
           </label>
           <p className="text-xs text-muted-foreground mb-2">
-            Informe o número da OS (ex: ATD-000123) do prestador que esteve no local e solicitou a peça. O motoby poderá contatá-lo em caso de dúvidas.
+            Selecione o atendimento em que o prestador solicitou a peça. O motoby poderá contatá-lo em caso de dúvidas.
           </p>
-          <div className="flex gap-2">
+
+          {/* Campo de busca */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="ATD-000123"
-              value={osNumber}
-              onChange={e => { setOsNumber(e.target.value); setOsData(null); setOsError(''); }}
-              className="flex-1 h-11 px-3 rounded-xl border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring uppercase"
+              placeholder="Buscar por número, prestador ou serviço..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full h-11 pl-9 pr-3 rounded-xl border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
-            <button
-              onClick={handleOsLookup}
-              disabled={osLoading || normalizeOs(osNumber).length < 4}
-              className={cn(
-                "px-4 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5",
-                osLoading || normalizeOs(osNumber).length < 4
-                  ? "bg-muted text-muted-foreground cursor-not-allowed"
-                  : "bg-primary text-primary-foreground"
-              )}
-            >
-              {osLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-              Buscar
-            </button>
           </div>
+
           {osError && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-2 text-xs text-red-700">
               {osError}
             </div>
           )}
 
-          {/* Dados da OS encontrada */}
-          {osData && (
+          {/* Lista de OSs */}
+          {osLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <span className="text-xs text-muted-foreground ml-2">Carregando atendimentos...</span>
+            </div>
+          ) : filteredOs.length === 0 && !osError ? (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-700 text-center">
+              {osList.length === 0
+                ? 'Nenhum atendimento com prazo ativo para compra de peça no momento.'
+                : 'Nenhum atendimento encontrado para a busca.'}
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {filteredOs.map(os => (
+                <button
+                  key={os.id}
+                  onClick={() => setSelectedOs(os)}
+                  className={cn(
+                    "w-full text-left p-3 rounded-xl border-2 transition-all",
+                    selectedOs?.id === os.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-foreground">{os.service_number || 'Sem número'}</span>
+                        <span className={cn(
+                          "text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-1",
+                          "bg-amber-100 text-amber-700"
+                        )}>
+                          <Clock className="w-2.5 h-2.5" />
+                          {formatDeadline(os.parts_return_deadline)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                        <User className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{os.provider_name || 'Prestador não informado'}</span>
+                      </div>
+                      <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                        <Wrench className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-1">{os.description || 'Sem descrição'}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Dados da OS selecionada */}
+          {selectedOs && (
             <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 mt-2 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-bold text-emerald-800">OS selecionada: {selectedOs.service_number}</p>
                 </div>
-                <p className="text-sm font-bold text-emerald-800">OS encontrada: {osData.service_number}</p>
+                <button onClick={() => setSelectedOs(null)} className="text-emerald-600 hover:text-emerald-800">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Prestador */}
@@ -157,11 +230,11 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Prestador da OS</p>
                 <div className="flex items-center gap-2 text-xs text-foreground">
                   <User className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                  <span className="font-semibold">{osData.provider_name || 'Não informado'}</span>
+                  <span className="font-semibold">{selectedOs.provider_name || 'Não informado'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-foreground">
                   <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                  <span>{osData.provider_phone || 'Telefone não disponível'}</span>
+                  <span>{selectedOs.provider_phone || 'Telefone não disponível'}</span>
                 </div>
               </div>
 
@@ -170,7 +243,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Serviço</p>
                 <div className="flex items-start gap-2 text-xs text-foreground">
                   <Wrench className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span className="line-clamp-2">{osData.description || 'Sem descrição'}</span>
+                  <span className="line-clamp-2">{selectedOs.description || 'Sem descrição'}</span>
                 </div>
               </div>
 
@@ -180,9 +253,9 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
                 <div className="flex items-start gap-2 text-xs text-foreground">
                   <MapPinned className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <span>
-                    {osData.address || '—'}{osData.number ? `, ${osData.number}` : ''}
-                    {osData.neighborhood ? ` — ${osData.neighborhood}` : ''}
-                    {osData.city ? `, ${osData.city}` : ''}
+                    {selectedOs.address || '—'}{selectedOs.number ? `, ${selectedOs.number}` : ''}
+                    {selectedOs.neighborhood ? ` — ${selectedOs.neighborhood}` : ''}
+                    {selectedOs.city ? `, ${selectedOs.city}` : ''}
                   </span>
                 </div>
               </div>
