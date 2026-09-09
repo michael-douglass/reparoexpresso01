@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   MapPin, Phone, BellRing, KeyRound,
-  Navigation, Wrench, CheckCircle2, ClipboardList, PlusCircle, ExternalLink, PauseCircle, PlayCircle, ZoomIn
+  Navigation, Wrench, CheckCircle2, ClipboardList, PlusCircle, ExternalLink, PauseCircle, PlayCircle, ZoomIn,
+  Bike, Store, Clock, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
@@ -43,6 +44,15 @@ const STEPS = [
 
 // Status de espera — não faz parte do fluxo linear de STEPS
 const WAITING_STATUS = 'em_espera';
+
+// Fluxo específico do Moto Peça (buscar_peca_moto) — controlado pelo campo peca_status
+const PECA_STEPS = [
+  { key: 'aguardando', label: 'Aguardando', icon: Clock, next: 'iniciando_deslocamento', nextLabel: 'Iniciar deslocamento' },
+  { key: 'iniciando_deslocamento', label: 'Deslocando p/ loja', icon: Bike, next: 'compra_realizada', nextLabel: 'Compra realizada' },
+  { key: 'compra_realizada', label: 'Compra realizada', icon: Store, next: 'a_caminho_cliente', nextLabel: 'A caminho do cliente' },
+  { key: 'a_caminho_cliente', label: 'A caminho do cliente', icon: Navigation, next: 'peca_entregue', nextLabel: 'Peça entregue' },
+  { key: 'peca_entregue', label: 'Peça entregue', icon: CheckCircle2, next: null, nextLabel: null },
+];
 
 // Toca beep de alerta urgente (três apitos curtos)
 function playAlertBeep() {
@@ -203,6 +213,32 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showExtraChargesModal, setShowExtraChargesModal] = useState(false);
+  const [pecaUpdating, setPecaUpdating] = useState(false);
+
+  const isMotoPeca = liveJob.service_type === 'buscar_peca_moto';
+  const pecaCurrentStatus = liveJob.peca_status || 'aguardando';
+  const pecaCurrentIdx = PECA_STEPS.findIndex(s => s.key === pecaCurrentStatus);
+  const pecaCurrentStep = PECA_STEPS[pecaCurrentIdx];
+
+  const advancePecaStatus = async () => {
+    if (!pecaCurrentStep?.next) return;
+    setPecaUpdating(true);
+    try {
+      const nextStatus = pecaCurrentStep.next;
+      const isLast = nextStatus === 'peca_entregue';
+      const payload = { peca_status: nextStatus };
+      if (isLast) {
+        payload.status = 'concluido';
+        payload.final_price = liveJob.estimated_price || liveJob.client_suggested_price || null;
+      }
+      const updated = await base44.entities.ServiceRequest.update(liveJob.id, payload);
+      setLiveJob(updated);
+    } catch (e) {
+      // silencia
+    } finally {
+      setPecaUpdating(false);
+    }
+  };
 
   // Sincroniza liveJob quando o job externo muda
   useEffect(() => { setLiveJob(job); }, [job]);
@@ -258,6 +294,51 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
 
   // Botão de ação principal por etapa
   const renderActions = () => {
+    // Fluxo específico do Moto Peça — botões de status do motoboy
+    if (isMotoPeca) {
+      return (
+        <div className="space-y-3">
+          <div className="bg-primary/10 border border-primary/30 rounded-2xl p-3">
+            <p className="text-xs font-bold text-primary uppercase tracking-wide flex items-center gap-1 mb-2">
+              <Bike className="w-3.5 h-3.5" /> Moto Peça — Progresso da entrega
+            </p>
+            <div className="space-y-1.5">
+              {PECA_STEPS.filter(s => s.next).map(step => {
+                const stepIdx = PECA_STEPS.findIndex(s => s.key === step.key);
+                const isDone = stepIdx < pecaCurrentIdx;
+                const isCurrent = stepIdx === pecaCurrentIdx;
+                const isFuture = stepIdx > pecaCurrentIdx;
+                const isLast = step.next === 'peca_entregue';
+                const Icon = step.icon;
+                return (
+                  <button
+                    key={step.key}
+                    onClick={isCurrent ? advancePecaStatus : undefined}
+                    disabled={!isCurrent || pecaUpdating}
+                    className={cn(
+                      "w-full rounded-xl h-11 px-3 font-bold text-sm gap-2 flex items-center justify-center transition-colors",
+                      isCurrent && isLast && "bg-green-600 hover:bg-green-700 text-white",
+                      isCurrent && !isLast && "bg-primary hover:bg-primary/90 text-primary-foreground",
+                      isDone && "bg-green-100 text-green-700",
+                      isFuture && "bg-muted text-muted-foreground cursor-not-allowed"
+                    )}
+                  >
+                    {isCurrent && pecaUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                      <>
+                        {isDone ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                        <span>{isDone ? step.label : step.nextLabel}</span>
+                        {isFuture && <span className="text-[11px] font-normal opacity-70">• em breve</span>}
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     if (liveJob.status === 'aceito') {
       return (
         <Button
