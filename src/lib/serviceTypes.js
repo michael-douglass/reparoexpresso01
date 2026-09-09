@@ -25,5 +25,5 @@ export const SERVICE_TYPES = [
   { value: "pane_seca", label: "Pane Seca", icon: Power, group: "veiculo" },
   { value: "reboque", label: "Reboque", icon: Car, group: "veiculo" },
   { value: "chaveiro_veiculo", label: "Chaveiro", icon: Lock, group: "veiculo" },
-  { value: "buscar_peca_moto", label: "Buscar Peça (Moto)", icon: Bike, group: "veiculo", needsPecaMoto: true },
+  { value: "buscar_peca_moto", label: "Buscar Peça (Moto)", icon: Bike, group: "casa", needsPecaMoto: true },
 ];

@@ -86,7 +86,7 @@ export default function SolicitarServico() {
       setStep(clientProfile ? 1 : 0);
     }
   }, [userLoaded, clientLoading, clientProfile, step]);
-  const [serviceTab, setServiceTab] = useState(urlParams.get('tipo') && ['troca_pneu','recarga_bateria','conserto_pneu','veiculo_outros','buscar_peca_moto','reboque','pane_seca','chaveiro_veiculo'].includes(urlParams.get('tipo')) ? 'veiculo' : 'casa');
+  const [serviceTab, setServiceTab] = useState(urlParams.get('tipo') && ['troca_pneu','recarga_bateria','conserto_pneu','veiculo_outros','reboque','pane_seca','chaveiro_veiculo'].includes(urlParams.get('tipo')) ? 'veiculo' : 'casa');
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [showProviderSearch, setShowProviderSearch] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
