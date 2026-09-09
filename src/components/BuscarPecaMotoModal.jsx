@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Bike, MapPin, Store, DollarSign, Camera, X, Loader2, Info } from 'lucide-react';
+import { Bike, MapPin, Store, DollarSign, Camera, X, Loader2, Info, Search, Phone, User, Wrench, MapPinned } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 
 export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
+  const [osNumber, setOsNumber] = useState('');
+  const [osData, setOsData] = useState(null);
+  const [osLoading, setOsLoading] = useState(false);
+  const [osError, setOsError] = useState('');
   const [pecas, setPecas] = useState('');
   const [loja, setLoja] = useState('');
   const [lojaOutra, setLojaOutra] = useState(false);
@@ -19,6 +23,32 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
     'Loja específica (informar endereço)',
   ];
 
+  const normalizeOs = (val) => val.trim().toUpperCase().replace(/\s/g, '');
+
+  const handleOsLookup = async () => {
+    const norm = normalizeOs(osNumber);
+    if (norm.length < 4) {
+      setOsError('Digite o número da OS (ex: ATD-000123)');
+      setOsData(null);
+      return;
+    }
+    setOsLoading(true);
+    setOsError('');
+    setOsData(null);
+    try {
+      const results = await base44.entities.ServiceRequest.filter({ service_number: norm });
+      if (results && results.length > 0) {
+        setOsData(results[0]);
+      } else {
+        setOsError('OS não encontrada. Verifique o número informado.');
+      }
+    } catch (e) {
+      setOsError('Erro ao buscar a OS. Tente novamente.');
+    } finally {
+      setOsLoading(false);
+    }
+  };
+
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -30,17 +60,22 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
 
   const removePhoto = (idx) => setFotos(prev => prev.filter((_, i) => i !== idx));
 
-  const canConfirm = pecas.trim().length > 3 && fotos.length >= 1;
+  const canConfirm = pecas.trim().length > 3 && fotos.length >= 1 && osData;
 
   const handleConfirm = () => {
     if (!canConfirm) return;
     const lojaFinal = loja === 'Loja específica (informar endereço)' ? lojaOutra : loja;
-    const desc = `Busca de peça por moto — Peças: ${pecas}.${lojaFinal ? ` Loja: ${lojaFinal}.` : ''}${valorEstimado ? ` Valor estimado das peças: R$ ${valorEstimado}.` : ''} O motoby busca as peças e entrega no local do cliente.`;
+    const osRef = osData.service_number || osData.id;
+    const desc = `Busca de peça por moto — OS de origem: ${osRef}. Peças: ${pecas}.${lojaFinal ? ` Loja: ${lojaFinal}.` : ''}${valorEstimado ? ` Valor estimado das peças: R$ ${valorEstimado}.` : ''} O motoby busca as peças e entrega no local do cliente. Prestador da OS: ${osData.provider_name || 'N/A'} (tel: ${osData.provider_phone || 'N/A'}).`;
     onSelect({
       description: desc,
       photos: fotos,
       loja: lojaFinal,
       valorEstimado: valorEstimado ? Number(valorEstimado) : null,
+      os_number: osRef,
+      os_id: osData.id,
+      provider_name: osData.provider_name,
+      provider_phone: osData.provider_phone,
     });
   };
 
@@ -67,6 +102,96 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
             O valor das peças é pago à parte (combinado direto com o motoby).
             Você paga apenas o serviço de busca e entrega.
           </p>
+        </div>
+
+        {/* Número da OS de origem */}
+        <div className="space-y-2 mb-4">
+          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Search className="w-4 h-4" /> Número da OS do prestador *
+          </label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Informe o número da OS (ex: ATD-000123) do prestador que esteve no local e solicitou a peça. O motoby poderá contatá-lo em caso de dúvidas.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="ATD-000123"
+              value={osNumber}
+              onChange={e => { setOsNumber(e.target.value); setOsData(null); setOsError(''); }}
+              className="flex-1 h-11 px-3 rounded-xl border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring uppercase"
+            />
+            <button
+              onClick={handleOsLookup}
+              disabled={osLoading || normalizeOs(osNumber).length < 4}
+              className={cn(
+                "px-4 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5",
+                osLoading || normalizeOs(osNumber).length < 4
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground"
+              )}
+            >
+              {osLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              Buscar
+            </button>
+          </div>
+          {osError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-2 text-xs text-red-700">
+              {osError}
+            </div>
+          )}
+
+          {/* Dados da OS encontrada */}
+          {osData && (
+            <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 mt-2 space-y-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold text-emerald-800">OS encontrada: {osData.service_number}</p>
+              </div>
+
+              {/* Prestador */}
+              <div className="bg-white/60 rounded-xl p-2.5 space-y-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Prestador da OS</p>
+                <div className="flex items-center gap-2 text-xs text-foreground">
+                  <User className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <span className="font-semibold">{osData.provider_name || 'Não informado'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-foreground">
+                  <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <span>{osData.provider_phone || 'Telefone não disponível'}</span>
+                </div>
+              </div>
+
+              {/* Serviço */}
+              <div className="bg-white/60 rounded-xl p-2.5 space-y-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Serviço</p>
+                <div className="flex items-start gap-2 text-xs text-foreground">
+                  <Wrench className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span className="line-clamp-2">{osData.description || 'Sem descrição'}</span>
+                </div>
+              </div>
+
+              {/* Endereço */}
+              <div className="bg-white/60 rounded-xl p-2.5 space-y-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Endereço</p>
+                <div className="flex items-start gap-2 text-xs text-foreground">
+                  <MapPinned className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span>
+                    {osData.address || '—'}{osData.number ? `, ${osData.number}` : ''}
+                    {osData.neighborhood ? ` — ${osData.neighborhood}` : ''}
+                    {osData.city ? `, ${osData.city}` : ''}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-emerald-700 pt-1">
+                ✓ O motoby usará estes dados para contato em caso de dúvidas sobre as peças.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Peças necessárias */}
