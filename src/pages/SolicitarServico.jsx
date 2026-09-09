@@ -547,6 +547,7 @@ export default function SolicitarServico() {
             problem_photos,
             security_password: generatePassword(),
             validation_password: generatePassword(),
+            ...(type === 'buscar_peca_moto' && pecaOsId ? { peca_origem_os_id: pecaOsId, peca_status: 'aguardando' } : {}),
           });
         })
       );

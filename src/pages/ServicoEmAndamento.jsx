@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import BeforeAfterPhotos from '@/components/servico/BeforeAfterPhotos';
 import MaterialExtraList from '@/components/servico/MaterialExtraList';
 import SignAndCompleteModal from '@/components/servico/SignAndCompleteModal';
+import MotoPecaStatusPanel from '@/components/motopeca/MotoPecaStatusPanel';
 import { toast } from 'sonner';
 
 const SERVICE_LABELS = {
@@ -64,6 +65,10 @@ export default function ServicoEmAndamento() {
   }
 
   if (!service) return null;
+
+  if (service.service_type === 'buscar_peca_moto') {
+    return <MotoPecaStatusPanel service={service} onUpdate={fetchService} />;
+  }
 
   const startedAt = service.updated_date
     ? new Date(service.updated_date).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })

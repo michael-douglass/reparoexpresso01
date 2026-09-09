@@ -27,6 +27,7 @@ import ServiceStatusBanner from '../components/tracking/ServiceStatusBanner';
 import ServiceTrackingMap from '../components/tracking/ServiceTrackingMap';
 import ProviderTrackingCard from '../components/tracking/ProviderTrackingCard';
 import ServiceProgressStepper from '../components/tracking/ServiceProgressStepper';
+import MotoPecaTrackingCard from '../components/motopeca/MotoPecaTrackingCard';
 import { ArrowLeft } from "lucide-react";
 
 const STATUS_STEPS = [
@@ -647,20 +648,30 @@ export default function AcompanharServico() {
         const daysLeft = createdAt ? Math.ceil((createdAt.getTime() + 15 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000)) : null;
         const isPastDeadline = daysLeft != null && daysLeft <= 0;
 
+        // Busca OS de Moto Peça vinculada a este atendimento
+        const motoPecaOs = allRequests.find(r => r.service_type === 'buscar_peca_moto' && r.peca_origem_os_id === request.id);
+
         return (
-          <div className={`rounded-3xl p-5 border-2 mb-5 ${isPastDeadline ? 'bg-red-50 border-red-300' : daysLeft <= 3 ? 'bg-amber-50 border-amber-300' : 'bg-blue-50 border-blue-200'}`}>
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{isPastDeadline ? '❌' : '⏰'}</span>
-              <div className="flex-1">
-                <p className={`font-bold ${isPastDeadline ? 'text-red-800' : daysLeft <= 3 ? 'text-amber-800' : 'text-blue-800'}`}>
-                  {isPastDeadline ? 'Prazo expirado' : `${daysLeft} dia${daysLeft !== 1 ? 's' : ''} restante${daysLeft !== 1 ? 's' : ''}`}
-                </p>
-                <p className={`text-xs mt-1 ${isPastDeadline ? 'text-red-700' : daysLeft <= 3 ? 'text-amber-700' : 'text-blue-700'}`}>
-                  Cliente tem até 15 dias corridos para comprar a peça e solicitar retorno
-                </p>
+          <>
+            {request.peca_solicitada && motoPecaOs && (
+              <MotoPecaTrackingCard originalRequest={request} motoPecaOs={motoPecaOs} />
+            )}
+            <div className={`rounded-3xl p-5 border-2 mb-5 ${isPastDeadline ? 'bg-red-50 border-red-300' : daysLeft <= 3 ? 'bg-amber-50 border-amber-300' : 'bg-blue-50 border-blue-200'}`}>
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">{isPastDeadline ? '❌' : '⏰'}</span>
+                <div className="flex-1">
+                  <p className={`font-bold ${isPastDeadline ? 'text-red-800' : daysLeft <= 3 ? 'text-amber-800' : 'text-blue-800'}`}>
+                    {isPastDeadline ? 'Prazo expirado' : `${daysLeft} dia${daysLeft !== 1 ? 's' : ''} restante${daysLeft !== 1 ? 's' : ''}`}
+                  </p>
+                  <p className={`text-xs mt-1 ${isPastDeadline ? 'text-red-700' : daysLeft <= 3 ? 'text-amber-700' : 'text-blue-700'}`}>
+                    {request.peca_solicitada
+                      ? 'Moto Peça em andamento — acompanhe o status acima'
+                      : 'Cliente tem até 15 dias corridos para comprar a peça e solicitar retorno'}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          </>
         );
       })()}
 

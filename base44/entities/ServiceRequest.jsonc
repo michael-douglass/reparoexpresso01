@@ -163,7 +163,7 @@
       "type": "number",
       "description": "Longitude do local de entrega (para reboque)"
     },
-    "tow_distance_km": {
+    "towDistance_km": {
       "type": "number",
       "description": "Dist\u00e2ncia em km para reboque (calculada)"
     },
@@ -379,6 +379,22 @@
       "type": "boolean",
       "default": false,
       "description": "Indica que o cliente j\u00e1 solicitou a busca de pe\u00e7a por moto para este atendimento"
+    },
+    "peca_status": {
+      "type": "string",
+      "enum": [
+        "aguardando",
+        "iniciando_deslocamento",
+        "compra_realizada",
+        "a_caminho_cliente",
+        "peca_entregue"
+      ],
+      "default": "aguardando",
+      "description": "Status do entrega de pe\u00e7a por moto (service_type=buscar_peca_moto)"
+    },
+    "peca_origem_os_id": {
+      "type": "string",
+      "description": "ID da OS de origem que gerou a busca de pe\u00e7a por moto"
     },
     "tech_visit_reason": {
       "type": "string",
