@@ -296,6 +296,7 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
   const renderActions = () => {
     // Fluxo específico do Moto Peça — botões de status do motoboy
     if (isMotoPeca) {
+      const checklistDone = !!liveJob.checklist?.completed_at;
       return (
         <div className="space-y-3">
           <div className="bg-primary/10 border border-primary/30 rounded-2xl p-3">
@@ -310,17 +311,19 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
                 const isFuture = stepIdx > pecaCurrentIdx;
                 const isLast = step.next === 'peca_entregue';
                 const Icon = step.icon;
+                const blockedByChecklist = isCurrent && isLast && !checklistDone;
                 return (
                   <button
                     key={step.key}
-                    onClick={isCurrent ? advancePecaStatus : undefined}
-                    disabled={!isCurrent || pecaUpdating}
+                    onClick={isCurrent && !blockedByChecklist ? advancePecaStatus : undefined}
+                    disabled={!isCurrent || pecaUpdating || blockedByChecklist}
                     className={cn(
                       "w-full rounded-xl h-11 px-3 font-bold text-sm gap-2 flex items-center justify-center transition-colors",
                       isCurrent && isLast && "bg-green-600 hover:bg-green-700 text-white",
                       isCurrent && !isLast && "bg-primary hover:bg-primary/90 text-primary-foreground",
                       isDone && "bg-green-100 text-green-700",
-                      isFuture && "bg-muted text-muted-foreground cursor-not-allowed"
+                      isFuture && "bg-muted text-muted-foreground cursor-not-allowed",
+                      blockedByChecklist && "bg-muted text-muted-foreground cursor-not-allowed"
                     )}
                   >
                     {isCurrent && pecaUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : (
@@ -328,6 +331,7 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
                         {isDone ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                         <span>{isDone ? step.label : step.nextLabel}</span>
                         {isFuture && <span className="text-[11px] font-normal opacity-70">• em breve</span>}
+                        {blockedByChecklist && <span className="text-[11px] font-normal opacity-70">• checklist pendente</span>}
                       </>
                     )}
                   </button>
@@ -335,6 +339,22 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
               })}
             </div>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className={cn(
+              "w-full rounded-xl",
+              checklistDone ? "border-green-400 text-green-700 hover:bg-green-50" : "border-primary text-primary"
+            )}
+            onClick={onShowChecklist}
+          >
+            <ClipboardList className="w-4 h-4 mr-1" /> {checklistDone ? 'Editar Checklist ✓' : 'Preencher Checklist'}
+          </Button>
+          {!checklistDone && (
+            <p className="text-xs text-orange-600 text-center">
+              ⚠️ Preencha o checklist antes de confirmar a entrega da peça
+            </p>
+          )}
         </div>
       );
     }
