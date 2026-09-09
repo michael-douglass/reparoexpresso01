@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, MapPin, Calendar, DollarSign, Star, Clock, CheckCircle2, AlertCircle, Loader2, Plus } from "lucide-react";
+import { ChevronRight, MapPin, Calendar, DollarSign, Star, Clock, CheckCircle2, AlertCircle, Loader2, Plus, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
 
@@ -177,6 +177,14 @@ export default function MeusPedidos() {
                             <p className="font-semibold text-primary">R$ {req.final_price.toFixed(2)}</p>
                           )}
                         </div>
+
+                        {req.peca_solicitada && (
+                          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                            <Package className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                            <span className="text-xs font-semibold text-emerald-700">Solicitação de peça enviada com sucesso</span>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 ml-auto" />
+                          </div>
+                        )}
 
                         <div className="text-xs text-muted-foreground flex items-center gap-3">
                           {req.address && (

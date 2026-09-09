@@ -118,6 +118,7 @@ export default function SolicitarServico() {
   const [fixacoesTipo, setFixacoesTipo] = useState(null);
   const [showOutrosModal, setShowOutrosModal] = useState(false);
   const [showBuscarPecaMotoModal, setShowBuscarPecaMotoModal] = useState(false);
+  const [pecaOsId, setPecaOsId] = useState(null);
   const [showSubstituicaoTelhaModal, setShowSubstituicaoTelhaModal] = useState(false);
   const [substituicaoTelhaTipo, setSubstituicaoTelhaTipo] = useState(null);
   const [towQuestions, setTowQuestions] = useState({});
@@ -569,6 +570,11 @@ export default function SolicitarServico() {
           security_password: generatePassword(),
           validation_password: generatePassword(),
         });
+      }
+
+      // Marca a OS de origem como "peça solicitada" quando o cliente cria um buscar_peca_moto
+      if (serviceTypes.includes('buscar_peca_moto') && pecaOsId) {
+        await base44.entities.ServiceRequest.update(pecaOsId, { peca_solicitada: true }).catch(() => {});
       }
 
       return results[0];
@@ -1294,6 +1300,7 @@ export default function SolicitarServico() {
               onCancel={() => setShowBuscarPecaMotoModal(false)}
               onSelect={(data) => {
                 set('service_type', [...form.service_type, 'buscar_peca_moto']);
+                setPecaOsId(data.os_id);
                 setDescriptionsPerService(prev => ({
                   ...prev,
                   buscar_peca_moto: {
