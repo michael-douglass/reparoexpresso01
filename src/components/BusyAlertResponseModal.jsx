@@ -114,7 +114,7 @@ export default function BusyAlertResponseModal({ alert, provider, onClose }) {
 
           {/* Seletor de tempo */}
           <div>
-            <p className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+            <p className="text-sm font-semibold text-black mb-2 flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Em quanto tempo você termina?
             </p>

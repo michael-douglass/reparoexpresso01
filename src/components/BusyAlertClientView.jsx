@@ -110,7 +110,7 @@ export default function BusyAlertClientView({ alertId, onConfirm, form, onProvid
                 <User className="w-5 h-5 text-green-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">{r.provider_name}</p>
+                <p className="text-sm font-bold text-black">{r.provider_name}</p>
                 <p className="text-xs text-muted-foreground">Prestador disponível após serviço atual</p>
               </div>
             </div>
@@ -119,12 +119,12 @@ export default function BusyAlertClientView({ alertId, onConfirm, form, onProvid
             <div className="bg-green-50 rounded-xl p-3 border border-green-200 space-y-2">
               <p className="text-xs font-bold text-green-800 mb-1">⏱️ Estimativa de chegada:</p>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Termina atendimento atual em:</span>
-                <span className="font-semibold text-foreground">~{r.finish_in_minutes} min</span>
+                <span className="text-black">Termina atendimento atual em:</span>
+                <span className="font-semibold text-black">~{r.finish_in_minutes} min</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Tempo de deslocamento até você:</span>
-                <span className="font-semibold text-foreground">~{r.travel_minutes || 0} min</span>
+                <span className="text-black">Tempo de deslocamento até você:</span>
+                <span className="font-semibold text-black">~{r.travel_minutes || 0} min</span>
               </div>
               <div className="h-px bg-green-200" />
               <div className="flex items-center justify-between">
