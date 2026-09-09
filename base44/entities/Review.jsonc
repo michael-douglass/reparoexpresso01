@@ -57,6 +57,10 @@
     "service_description": {
       "type": "string",
       "description": "Descri\u00e7\u00e3o do servi\u00e7o realizado"
+    },
+    "recomendaria": {
+      "type": "boolean",
+      "description": "Se o cliente recomendaria este servi\u00e7o a outros"
     }
   },
   "required": [

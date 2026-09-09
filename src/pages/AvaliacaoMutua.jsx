@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { ArrowLeft, CheckCircle2, Shield, Check, Loader2, User, MessageSquare, Star, Wrench } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Shield, Check, Loader2, User, Star, Wrench, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -74,10 +74,12 @@ export default function AvaliacaoMutua() {
   const [clientRating, setClientRating] = useState(0);
   const [clientTags, setClientTags] = useState([]);
   const [clientComment, setClientComment] = useState('');
+  const [clientRecomendaria, setClientRecomendaria] = useState(null);
 
   const [providerRating, setProviderRating] = useState(0);
   const [providerTags, setProviderTags] = useState([]);
   const [providerComment, setProviderComment] = useState('');
+  const [providerRecomendaria, setProviderRecomendaria] = useState(null);
 
   const [existingClientReview, setExistingClientReview] = useState(null);
   const [existingProviderReview, setExistingProviderReview] = useState(null);
@@ -137,8 +139,16 @@ export default function AvaliacaoMutua() {
       toast.error('Selecione uma nota para o prestador');
       return;
     }
+    if (isClient && clientRecomendaria === null) {
+      toast.error('Informe se recomendaria este serviço');
+      return;
+    }
     if (isProvider && providerRating === 0) {
       toast.error('Selecione uma nota para o cliente');
+      return;
+    }
+    if (isProvider && providerRecomendaria === null) {
+      toast.error('Informe se recomendaria este cliente');
       return;
     }
     setSubmitting(true);
@@ -157,6 +167,7 @@ export default function AvaliacaoMutua() {
           comment: clientComment || `Tags: ${clientTags.map(t => CLIENT_TAGS.find(c => c.key === t)?.label).join(', ')}`,
           is_detailed: false,
           service_description: SERVICE_LABELS[service.service_type] || service.service_type,
+          recomendaria: clientRecomendaria,
         });
         await base44.entities.ServiceRequest.update(id, { rating_client: clientRating });
         try {
@@ -179,6 +190,7 @@ export default function AvaliacaoMutua() {
           overall_rating: providerRating,
           comment: providerComment || `Tags: ${providerTags.map(t => PROVIDER_TAGS.find(c => c.key === t)?.label).join(', ')}`,
           tags: providerTags,
+          recomendaria: providerRecomendaria,
         });
       }
 
@@ -298,6 +310,35 @@ export default function AvaliacaoMutua() {
               </p>
             </div>
 
+            {/* Recomendaria este serviço? */}
+            <div>
+              <p className="text-xs font-semibold text-gray-600 mb-2.5">Recomendaria este serviço?</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setClientRecomendaria(true)}
+                  className={cn(
+                    'flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 text-sm font-bold transition-all active:scale-[0.98]',
+                    clientRecomendaria === true
+                      ? 'bg-green-50 border-green-500 text-green-700'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-green-300'
+                  )}
+                >
+                  <Check className="w-4 h-4" /> Sim
+                </button>
+                <button
+                  onClick={() => setClientRecomendaria(false)}
+                  className={cn(
+                    'flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 text-sm font-bold transition-all active:scale-[0.98]',
+                    clientRecomendaria === false
+                      ? 'bg-red-50 border-red-400 text-red-600'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-red-300'
+                  )}
+                >
+                  <X className="w-4 h-4" /> Não
+                </button>
+              </div>
+            </div>
+
             {/* Tags rápidas */}
             <div>
               <p className="text-xs font-semibold text-gray-600 mb-2.5">O que foi bom?</p>
@@ -377,6 +418,35 @@ export default function AvaliacaoMutua() {
               </p>
             </div>
 
+            {/* Recomendaria este cliente? */}
+            <div>
+              <p className="text-xs font-semibold text-gray-600 mb-2.5">Recomendaria este cliente?</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setProviderRecomendaria(true)}
+                  className={cn(
+                    'flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 text-sm font-bold transition-all active:scale-[0.98]',
+                    providerRecomendaria === true
+                      ? 'bg-blue-50 border-blue-500 text-blue-700'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300'
+                  )}
+                >
+                  <Check className="w-4 h-4" /> Sim
+                </button>
+                <button
+                  onClick={() => setProviderRecomendaria(false)}
+                  className={cn(
+                    'flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 text-sm font-bold transition-all active:scale-[0.98]',
+                    providerRecomendaria === false
+                      ? 'bg-red-50 border-red-400 text-red-600'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-red-300'
+                  )}
+                >
+                  <X className="w-4 h-4" /> Não
+                </button>
+              </div>
+            </div>
+
             <div>
               <p className="text-xs font-semibold text-gray-600 mb-2.5">O que foi bom?</p>
               <div className="flex flex-col gap-2">
@@ -416,54 +486,13 @@ export default function AvaliacaoMutua() {
           </motion.div>
         )}
 
-        {/* Read-only: the other party's evaluation */}
-        {isClient && existingProviderReview && (
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-3">
-            <h2 className="text-sm font-bold text-gray-900">Avaliação do prestador sobre você</h2>
-            <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <User className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">{service.client_name || 'Cliente'}</p>
-                <p className="text-xs text-gray-500">Cliente</p>
-              </div>
-            </div>
-            <StarRatingInput value={existingProviderReview.overall_rating || 0} readOnly size="w-7 h-7" />
-            {existingProviderReview.comment && (
-              <div className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                <MessageSquare className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-gray-700">{existingProviderReview.comment}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {isClient && !existingProviderReview && (
-          <div className="bg-white rounded-2xl p-5 border border-dashed border-gray-200 text-center">
-            <p className="text-sm text-gray-400">Aguardando avaliação do prestador...</p>
-          </div>
-        )}
-
-        {isProvider && existingClientReview && (
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-3">
-            <h2 className="text-sm font-bold text-gray-900">Avaliação do cliente sobre você</h2>
-            <StarRatingInput value={existingClientReview.overall_rating || 0} readOnly size="w-7 h-7" />
-            {existingClientReview.comment && (
-              <div className="bg-gray-50 rounded-xl p-3 flex items-start gap-2">
-                <MessageSquare className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-gray-700">{existingClientReview.comment}</p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Footer — Enviar avaliação */}
       <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-4 py-3 bg-white border-t border-gray-100">
         <Button
           onClick={handleSubmit}
-          disabled={submitting || (isClient ? clientRating === 0 : providerRating === 0)}
+          disabled={submitting || (isClient ? (clientRating === 0 || clientRecomendaria === null) : (providerRating === 0 || providerRecomendaria === null))}
           className="w-full rounded-2xl h-14 bg-[#0066FF] hover:bg-[#0055CC] text-white font-bold text-base gap-2 shadow-lg shadow-[#0066FF]/20 disabled:opacity-40 disabled:shadow-none"
         >
           {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}

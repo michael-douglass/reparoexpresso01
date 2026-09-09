@@ -36,6 +36,10 @@
         "type": "string"
       },
       "description": "Tags r\u00e1pidas selecionadas (ex: Cliente pontual, Facilitou acesso, Pagou em dia)"
+    },
+    "recomendaria": {
+      "type": "boolean",
+      "description": "Se o prestador recomendaria este cliente a outros"
     }
   },
   "required": [
