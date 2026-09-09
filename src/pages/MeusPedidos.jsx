@@ -10,9 +10,11 @@ import { useNavigate } from 'react-router-dom';
 
 const STATUS_CONFIG = {
   aguardando: { label: "Aguardando", color: "bg-yellow-100 text-yellow-800", icon: Clock },
+  agendado: { label: "Agendado", color: "bg-cyan-100 text-cyan-800", icon: Calendar },
   aceito: { label: "Aceito", color: "bg-blue-100 text-blue-800", icon: AlertCircle },
   a_caminho: { label: "A caminho", color: "bg-purple-100 text-purple-800", icon: AlertCircle },
   em_andamento: { label: "Em andamento", color: "bg-indigo-100 text-indigo-800", icon: Loader2 },
+  em_espera: { label: "Em espera", color: "bg-orange-100 text-orange-800", icon: Clock },
   concluido: { label: "Concluído", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
   cancelado: { label: "Cancelado", color: "bg-red-100 text-red-800", icon: AlertCircle },
 };
@@ -149,7 +151,7 @@ export default function MeusPedidos() {
           {activeRequests.length > 0 ? (
             <div className="space-y-3">
               {activeRequests.map(req => {
-                const statusConfig = STATUS_CONFIG[req.status];
+                const statusConfig = STATUS_CONFIG[req.status] || { label: req.status, color: "bg-gray-100 text-gray-800", icon: AlertCircle };
                 const StatusIcon = statusConfig.icon;
                 return (
                   <Card key={req.id} className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -208,7 +210,7 @@ export default function MeusPedidos() {
           {completedRequests.length > 0 ? (
             <div className="space-y-3">
               {completedRequests.map(req => {
-                const statusConfig = STATUS_CONFIG[req.status];
+                const statusConfig = STATUS_CONFIG[req.status] || { label: req.status, color: "bg-gray-100 text-gray-800", icon: AlertCircle };
                 const StatusIcon = statusConfig.icon;
                 return (
                   <Card key={req.id} className="overflow-hidden hover:shadow-lg transition-shadow">
