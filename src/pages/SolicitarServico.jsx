@@ -32,6 +32,7 @@ import { SERVICE_TYPES } from "@/lib/serviceTypes";
 import PhotoLightbox from "@/components/PhotoLightbox";
 import FixacoesDiversasModal from "@/components/FixacoesDiversasModal";
 import OutrosServicoModal from "@/components/OutrosServicoModal";
+import BuscarPecaMotoModal from "@/components/BuscarPecaMotoModal";
 import InteractiveScheduleCalendar from "@/components/InteractiveScheduleCalendar";
 import SurchargeAlert from "@/components/SurchargeAlert";
 
@@ -85,7 +86,7 @@ export default function SolicitarServico() {
       setStep(clientProfile ? 1 : 0);
     }
   }, [userLoaded, clientLoading, clientProfile, step]);
-  const [serviceTab, setServiceTab] = useState(urlParams.get('tipo') && ['troca_pneu','recarga_bateria','conserto_pneu','veiculo_outros'].includes(urlParams.get('tipo')) ? 'veiculo' : 'casa');
+  const [serviceTab, setServiceTab] = useState(urlParams.get('tipo') && ['troca_pneu','recarga_bateria','conserto_pneu','veiculo_outros','buscar_peca_moto','reboque','pane_seca','chaveiro_veiculo'].includes(urlParams.get('tipo')) ? 'veiculo' : 'casa');
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [showProviderSearch, setShowProviderSearch] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
@@ -116,6 +117,7 @@ export default function SolicitarServico() {
   const [showFixacoesModal, setShowFixacoesModal] = useState(false);
   const [fixacoesTipo, setFixacoesTipo] = useState(null);
   const [showOutrosModal, setShowOutrosModal] = useState(false);
+  const [showBuscarPecaMotoModal, setShowBuscarPecaMotoModal] = useState(false);
   const [showSubstituicaoTelhaModal, setShowSubstituicaoTelhaModal] = useState(false);
   const [substituicaoTelhaTipo, setSubstituicaoTelhaTipo] = useState(null);
   const [towQuestions, setTowQuestions] = useState({});
@@ -880,6 +882,7 @@ export default function SolicitarServico() {
                   if (s.value === 'fixacoes_diversas' && !selected) { setShowFixacoesModal(true); return; }
                   if (s.value === 'fixacoes_diversas' && selected) { setFixacoesTipo(null); }
                   if (s.value === 'pane_seca' && !selected) { setShowPaneSeccaAlert(true); return; }
+                  if (s.value === 'buscar_peca_moto' && !selected) { setShowBuscarPecaMotoModal(true); return; }
                   if (s.value === 'outros' && !selected) { setShowOutrosModal(true); return; }
                   if (s.value === 'outros' && selected) { setDescriptionsPerService(prev => { const n = {...prev}; delete n.outros; return n; }); }
                   set('service_type', selected
@@ -1282,6 +1285,24 @@ export default function SolicitarServico() {
                 setCaixaDaguaStep('tipo');
               }}
               onClose={() => setShowNaoSeiAlert(false)}
+            />
+          )}
+
+          {showBuscarPecaMotoModal && (
+            <BuscarPecaMotoModal
+              isOpen={showBuscarPecaMotoModal}
+              onCancel={() => setShowBuscarPecaMotoModal(false)}
+              onSelect={(data) => {
+                set('service_type', [...form.service_type, 'buscar_peca_moto']);
+                setDescriptionsPerService(prev => ({
+                  ...prev,
+                  buscar_peca_moto: {
+                    description: data.description,
+                    photos: data.photos,
+                  }
+                }));
+                setShowBuscarPecaMotoModal(false);
+              }}
             />
           )}
 

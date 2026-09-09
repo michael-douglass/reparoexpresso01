@@ -61,6 +61,7 @@
         "instalacao_suporte_tv",
         "fixacoes_diversas",
         "chaveiro_veiculo",
+        "buscar_peca_moto",
         "outros"
       ],
       "description": "Tipo de servi\u00e7o"

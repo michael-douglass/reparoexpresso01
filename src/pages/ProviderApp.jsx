@@ -44,6 +44,7 @@ const SERVICE_LABELS = {
   eletrica: "Elétrica", hidraulica: "Hidráulica", pintura: "Pintura",
   reparo_geral: "Reparo Geral", montagem: "Montagem", alvenaria: "Alvenaria",
   fechadura: "Fechadura", ar_condicionado: "Ar Condicionado", outros: "Outros",
+  buscar_peca_moto: "Buscar Peça (Moto)",
 };
 
 const URGENCY_LABELS = { agora: "🔥 Urgente", hoje: "⏰ Hoje", esta_semana: "📅 Esta semana" };

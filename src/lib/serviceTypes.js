@@ -1,4 +1,4 @@
-import { Zap, Droplets, Wrench, Lock, Wind, Hammer, Monitor, Car, Battery, Power, RotateCcw, Pin } from "lucide-react";
+import { Zap, Droplets, Wrench, Lock, Wind, Hammer, Monitor, Car, Battery, Power, RotateCcw, Pin, Bike } from "lucide-react";
 
 export const SERVICE_TYPES = [
   { value: "eletrica", label: "Elétrica", icon: Zap, group: "casa" },
@@ -25,4 +25,5 @@ export const SERVICE_TYPES = [
   { value: "pane_seca", label: "Pane Seca", icon: Power, group: "veiculo" },
   { value: "reboque", label: "Reboque", icon: Car, group: "veiculo" },
   { value: "chaveiro_veiculo", label: "Chaveiro", icon: Lock, group: "veiculo" },
+  { value: "buscar_peca_moto", label: "Buscar Peça (Moto)", icon: Bike, group: "veiculo", needsPecaMoto: true },
 ];
