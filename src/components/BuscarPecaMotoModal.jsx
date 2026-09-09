@@ -27,7 +27,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel }) {
       try {
         const me = await base44.auth.me();
         const results = await base44.entities.ServiceRequest.filter({
-          client_id: me.id,
+          created_by: me.email,
           status: 'em_espera',
         }, '-updated_date', 50);
         if (cancelled) return;

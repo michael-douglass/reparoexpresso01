@@ -390,11 +390,18 @@ export default function ProviderApp() {
   };
 
   const updateJobStatus = useMutation({
-    mutationFn: ({ id, status, final_price, tech_visit_reason }) => base44.entities.ServiceRequest.update(id, {
-      status,
-      ...(final_price && { final_price }),
-      ...(tech_visit_reason && { tech_visit_reason }),
-    }),
+    mutationFn: ({ id, status, final_price, tech_visit_reason }) => {
+      const updateData = {
+        status,
+        ...(final_price && { final_price }),
+        ...(tech_visit_reason && { tech_visit_reason }),
+      };
+      // Ao pausar para compra de peça, define prazo de 15 dias corridos para retorno
+      if (status === 'em_espera') {
+        updateData.parts_return_deadline = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString();
+      }
+      return base44.entities.ServiceRequest.update(id, updateData);
+    },
     onSuccess: (updatedJob) => {
       // Atualiza o estado local imediatamente com o dado retornado pelo backend
       if (updatedJob?.id) {
