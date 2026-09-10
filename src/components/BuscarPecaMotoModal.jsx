@@ -73,7 +73,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, presel
     const files = Array.from(e.target.files);
     if (!files.length) return;
     setUploading(true);
-    const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url)));
+    const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadPublicFile({ file: f }).then(r => r.file_url)));
     setFotos(prev => [...prev, ...urls]);
     setUploading(false);
   };

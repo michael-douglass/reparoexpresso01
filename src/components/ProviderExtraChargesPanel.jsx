@@ -197,7 +197,7 @@ export default function ProviderExtraChargesPanel({ service, onApprovalChange })
                   try {
                     const uploadedPhotos = [];
                     for (const file of files) {
-                      const result = await base44.integrations.Core.UploadFile({ file });
+                      const result = await base44.integrations.Core.UploadPublicFile({ file });
                       if (result?.file_url) {
                         uploadedPhotos.push(result.file_url);
                       }
@@ -311,7 +311,7 @@ export default function ProviderExtraChargesPanel({ service, onApprovalChange })
                           try {
                             const uploadedPhotos = [];
                             for (const file of files) {
-                              const result = await base44.integrations.Core.UploadFile({ file });
+                              const result = await base44.integrations.Core.UploadPublicFile({ file });
                               if (result?.file_url) {
                                 uploadedPhotos.push(result.file_url);
                               }

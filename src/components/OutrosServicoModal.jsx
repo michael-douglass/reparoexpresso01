@@ -18,7 +18,7 @@ export default function OutrosServicoModal({ onClose, onConfirm }) {
     if (!files.length) return;
     setUploadando(true);
     const urls = await Promise.all(
-      files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url))
+      files.map(f => base44.integrations.Core.UploadPublicFile({ file: f }).then(r => r.file_url))
     );
     setFotos(prev => [...prev, ...urls]);
     setUploadando(false);

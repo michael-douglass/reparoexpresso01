@@ -22,7 +22,7 @@ export default function AdditionalPointModal({ job, onClose }) {
     if (!files.length) return;
     setUploadingPhoto(true);
     const urls = await Promise.all(
-      files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url))
+      files.map(f => base44.integrations.Core.UploadPublicFile({ file: f }).then(r => r.file_url))
     );
     setPhotos(prev => [...prev, ...urls]);
     setUploadingPhoto(false);

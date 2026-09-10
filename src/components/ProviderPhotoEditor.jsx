@@ -13,7 +13,7 @@ function PhotoUploadCard({ label, icon: Icon, currentUrl, pendingUrl, onUploaded
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     onUploaded(file_url);
     setUploading(false);
   };

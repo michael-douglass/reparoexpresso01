@@ -10,7 +10,7 @@ async function uploadDataUrl(dataUrl, fileName) {
   const res = await fetch(dataUrl);
   const blob = await res.blob();
   const file = new File([blob], fileName, { type: blob.type });
-  const result = await base44.integrations.Core.UploadFile({ file });
+  const result = await base44.integrations.Core.UploadPublicFile({ file });
   return result?.file_url || null;
 }
 

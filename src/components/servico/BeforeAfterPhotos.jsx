@@ -16,7 +16,7 @@ export default function BeforeAfterPhotos({ service, onUpdate }) {
     try {
       const uploaded = [];
       for (const file of files) {
-        const result = await base44.integrations.Core.UploadFile({ file });
+        const result = await base44.integrations.Core.UploadPublicFile({ file });
         if (result?.file_url) uploaded.push(result.file_url);
       }
       const checklist = { ...(service.checklist || {}) };

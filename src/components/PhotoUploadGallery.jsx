@@ -15,7 +15,7 @@ export default function PhotoUploadGallery({ photos = [], onPhotosChange, readOn
     try {
       const uploadedPhotos = [];
       for (const file of files) {
-        const result = await base44.integrations.Core.UploadFile({ file });
+        const result = await base44.integrations.Core.UploadPublicFile({ file });
         uploadedPhotos.push(result.file_url);
       }
       onPhotosChange([...photos, ...uploadedPhotos]);

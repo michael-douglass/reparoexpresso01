@@ -43,7 +43,7 @@ export default function InvoicesAdmin() {
 
   const handleUploadProof = async (invoiceId, file) => {
     setUploadingId(invoiceId);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     await base44.entities.Invoice.update(invoiceId, { payment_proof_url: file_url });
     queryClient.invalidateQueries({ queryKey: ['all-invoices'] });
     toast.success('Comprovante anexado!');

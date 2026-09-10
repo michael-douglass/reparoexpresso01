@@ -41,7 +41,7 @@ export default function ServiceRefusalForm({ serviceRequest, onSuccess }) {
     try {
       const uploadedPhotos = [];
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
         uploadedPhotos.push(file_url);
       }
       setPhotos(prev => [...prev, ...uploadedPhotos]);

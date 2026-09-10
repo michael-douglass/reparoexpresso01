@@ -42,7 +42,7 @@ export default function BiweeklyClosingAdmin() {
 
   const uploadProofMutation = useMutation({
     mutationFn: async ({ id, file }) => {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       return base44.entities.BiweeklyClosing.update(id, { payment_proof_url: file_url });
     },
     onSuccess: () => {
@@ -57,7 +57,7 @@ export default function BiweeklyClosingAdmin() {
     try {
       let payment_proof_url = null;
       if (file) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
         payment_proof_url = file_url;
       }
       await markPaidMutation.mutateAsync({ id, payment_proof_url });

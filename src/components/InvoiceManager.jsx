@@ -103,7 +103,7 @@ export default function InvoiceManager({ providerId, providerName }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       setFormData(prev => ({ ...prev, file_url }));
       toast.success('Arquivo enviado!');
     } catch (err) {

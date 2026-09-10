@@ -101,7 +101,7 @@ export default function ProviderRegister() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingPhoto(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     set('photo_url', file_url);
     setUploadingPhoto(false);
   };
@@ -110,7 +110,7 @@ export default function ProviderRegister() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingFacePhoto(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     set('photo_url', file_url);
     setUploadingFacePhoto(false);
   };
@@ -119,7 +119,7 @@ export default function ProviderRegister() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingBodyPhoto(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     set('photo_body_url', file_url);
     setUploadingBodyPhoto(false);
   };

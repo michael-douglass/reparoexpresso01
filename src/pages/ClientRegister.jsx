@@ -30,7 +30,7 @@ export default function ClientRegister() {
     const file = e.target.files[0];
     if (!file) return;
     setPhotoUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     set('photo_url', file_url);
     setPhotoUploading(false);
   };

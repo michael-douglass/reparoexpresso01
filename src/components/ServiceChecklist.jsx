@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, CheckCircle2, Loader2, X, ClipboardList, Plus, Video, Play, Trash2, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import SignaturePad from './SignaturePad';
 
 const PRE_AUTH_ITEMS = [
@@ -63,7 +64,7 @@ export default function ServiceChecklist({ job, onClose }) {
     if (!files.length) return;
     setUploadingVideo(true);
     const urls = await Promise.all(
-      files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url))
+      files.map(f => base44.integrations.Core.UploadPublicFile({ file: f }).then(r => r.file_url))
     );
     setVideos(prev => [...prev, ...urls]);
     setUploadingVideo(false);
@@ -99,7 +100,7 @@ export default function ServiceChecklist({ job, onClose }) {
     if (!file) return;
     setUploadingProviderPhoto(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       setProviderPhoto(file_url);
     } catch {}
     setUploadingProviderPhoto(false);
@@ -119,48 +120,52 @@ export default function ServiceChecklist({ job, onClose }) {
     const res = await fetch(base64DataUrl);
     const blob = await res.blob();
     const file = new File([blob], filename, { type: blob.type });
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     return file_url;
   };
 
   const handleSave = async () => {
     setSaving(true);
+    try {
+      // Upload base64 photos to storage before saving
+      const [preAuthSignerPhotoUrl, preAuthSignatureUrl, finalSignerPhotoUrl, finalSignatureUrl, providerSignatureUrl] = await Promise.all([
+        uploadBase64AsFile(preAuthSignerPhoto, 'pre_auth_signer_photo.jpg'),
+        uploadBase64AsFile(preAuthSignature, 'pre_auth_signature.png'),
+        uploadBase64AsFile(finalSignerPhoto, 'final_signer_photo.jpg'),
+        uploadBase64AsFile(finalSignature, 'final_signature.png'),
+        uploadBase64AsFile(providerSignature, 'provider_signature.png'),
+      ]);
 
-    // Upload base64 photos to storage before saving
-    const [preAuthSignerPhotoUrl, preAuthSignatureUrl, finalSignerPhotoUrl, finalSignatureUrl, providerSignatureUrl] = await Promise.all([
-      uploadBase64AsFile(preAuthSignerPhoto, 'pre_auth_signer_photo.jpg'),
-      uploadBase64AsFile(preAuthSignature, 'pre_auth_signature.png'),
-      uploadBase64AsFile(finalSignerPhoto, 'final_signer_photo.jpg'),
-      uploadBase64AsFile(finalSignature, 'final_signature.png'),
-      uploadBase64AsFile(providerSignature, 'provider_signature.png'),
-    ]);
-
-    const checklistData = {
-      items: DEFAULT_ITEMS.map(item => ({ label: item, checked: !!checkedItems[item] })),
-      authorizations: AUTHORIZATION_ITEMS.map(item => ({ label: item, checked: !!authorizationItems[item] })),
-      videos,
-      notes,
-      pre_auth_description: preAuthDescription,
-      service_description: serviceDescription,
-      post_auth_description: postAuthDescription,
-      pre_auth_signature: preAuthSignatureUrl,
-      pre_auth_signer_photo: preAuthSignerPhotoUrl,
-      pre_auth_cpf: preAuthCpf,
-      final_signature: finalSignatureUrl,
-      final_signer_photo: finalSignerPhotoUrl,
-      final_cpf: finalCpf,
-      provider_cpf: providerCpf,
-      provider_photo: providerPhoto,
-      provider_signature: providerSignatureUrl,
-      location,
-      completed_at: new Date().toISOString(),
-    };
-    await base44.entities.ServiceRequest.update(job.id, {
-      checklist: checklistData,
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(onClose, 1500);
+      const checklistData = {
+        items: DEFAULT_ITEMS.map(item => ({ label: item, checked: !!checkedItems[item] })),
+        authorizations: AUTHORIZATION_ITEMS.map(item => ({ label: item, checked: !!authorizationItems[item] })),
+        videos,
+        notes,
+        pre_auth_description: preAuthDescription,
+        service_description: serviceDescription,
+        post_auth_description: postAuthDescription,
+        pre_auth_signature: preAuthSignatureUrl,
+        pre_auth_signer_photo: preAuthSignerPhotoUrl,
+        pre_auth_cpf: preAuthCpf,
+        final_signature: finalSignatureUrl,
+        final_signer_photo: finalSignerPhotoUrl,
+        final_cpf: finalCpf,
+        provider_cpf: providerCpf,
+        provider_photo: providerPhoto,
+        provider_signature: providerSignatureUrl,
+        location,
+        completed_at: new Date().toISOString(),
+      };
+      await base44.entities.ServiceRequest.update(job.id, {
+        checklist: checklistData,
+      });
+      setSaved(true);
+      setTimeout(onClose, 1500);
+    } catch (err) {
+      toast.error('Erro ao salvar checklist. Verifique sua conexão e tente novamente.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (saved) {

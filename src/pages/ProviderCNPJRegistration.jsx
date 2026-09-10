@@ -70,7 +70,7 @@ export default function ProviderCNPJRegistration() {
     try {
       setUploading(prev => ({ ...prev, [docId]: true }));
       
-      const response = await base44.integrations.Core.UploadFile({ file });
+      const response = await base44.integrations.Core.UploadPublicFile({ file });
       
       setUploadedDocs(prev => ({
         ...prev,

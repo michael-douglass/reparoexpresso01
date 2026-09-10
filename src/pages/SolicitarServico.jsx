@@ -177,7 +177,7 @@ export default function SolicitarServico() {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     setUploadingPhotosFor(serviceType);
-    const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url)));
+    const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadPublicFile({ file: f }).then(r => r.file_url)));
     setDescriptionsPerService(prev => ({
       ...prev,
       [serviceType]: {
@@ -447,7 +447,7 @@ export default function SolicitarServico() {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     setUploadingPhotos(true);
-    const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url)));
+    const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadPublicFile({ file: f }).then(r => r.file_url)));
     setForm(prev => ({ ...prev, problem_photos: [...prev.problem_photos, ...urls] }));
     setUploadingPhotos(false);
   };
@@ -460,7 +460,7 @@ export default function SolicitarServico() {
    const files = Array.from(e.target.files);
    if (!files.length) return;
    setUploadingPhotos(true);
-   const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadFile({ file: f }).then(r => r.file_url)));
+   const urls = await Promise.all(files.map(f => base44.integrations.Core.UploadPublicFile({ file: f }).then(r => r.file_url)));
    setForm(prev => ({ ...prev, foto_peca_cliente: [...prev.foto_peca_cliente, ...urls] }));
    setUploadingPhotos(false);
   };
