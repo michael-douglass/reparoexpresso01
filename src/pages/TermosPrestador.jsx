@@ -25,15 +25,17 @@ export default function TermosPrestador() {
       <div className="space-y-4 text-sm text-foreground leading-relaxed">
 
         <section>
-          <h2 className="text-base font-bold text-foreground mb-3">1. Partes</h2>
+          <h2 className="text-base font-bold text-foreground mb-3">1. Partes e Base Legal</h2>
           <p className="text-muted-foreground mb-2"><strong>Contratante:</strong> REPARO EXPRESSO TECNOLOGIA, CNPJ 39.973.464/0001-10, com sede na Rua Leozino de Oliveira, 273, Filadélfia, Betim/MG, CEP 32670-054</p>
-          <p className="text-muted-foreground"><strong>Contratado:</strong> [Razão social do PJ], CNPJ [nº], endereço completo</p>
+          <p className="text-muted-foreground mb-2"><strong>Contratado:</strong> Prestador de serviços, pessoa física ou jurídica, qualificado pelos dados informados em seu cadastro na plataforma.</p>
+          <p className="text-muted-foreground mb-2"><strong>NATUREZA JURÍDICA:</strong> Contrato de prestação de serviços autônomos, sem vínculo empregatício, regido pelo Código Civil (Lei 10.406/2002), pelo Marco Civil da Internet (Lei 12.965/2014) e pela Lei 13.709/2018 (LGPD), celebrado por meio eletrônico nos termos do art. 421-L do Código Civil.</p>
+          <p className="text-muted-foreground"><strong>INEXISTÊNCIA DE VÍNCULO:</strong> As partes declaram que a relação não configura vínculo empregatício, nos termos do art. 442-B da CLT e da Súmula 331 do TST.</p>
         </section>
 
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">2. Objeto</h2>
           <p className="text-muted-foreground">
-            Prestação de serviços de [descrever atividade] através da plataforma, sem vínculo empregatício, nos termos do art. 442-B da CLT.
+            Prestação de serviços de natureza residencial e veicular emergencial através da plataforma, sem subordinação jurídica, com autonomia do Contratado para aceitar ou recusar chamados, nos termos do art. 442-B da CLT e do art. 593 do Código Civil.
           </p>
         </section>
 
@@ -51,7 +53,7 @@ export default function TermosPrestador() {
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">4. Prazo e Vigência</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>4.1</strong> O presente contrato terá vigência de 12 meses, com início em [data] e término em [data].</li>
+            <li><strong>4.1</strong> O presente contrato terá vigência de 12 meses a partir do aceite eletrônico, sendo renovado automaticamente por iguais períodos.</li>
             <li><strong>4.2</strong> O contrato será renovado automaticamente por iguais períodos, salvo manifestação contrária de qualquer das partes, por escrito, com antecedência mínima de 30 dias do término da vigência.</li>
             <li><strong>4.3</strong> Em caso de não renovação, os serviços em andamento deverão ser concluídos conforme acordado.</li>
             <li><strong>4.4</strong> Este contrato poderá ser rescindido a qualquer tempo, por qualquer parte, mediante aviso prévio de 30 dias, sem ônus, ressalvados os pagamentos por serviços já prestados.</li>
@@ -63,8 +65,9 @@ export default function TermosPrestador() {
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
             <li><strong>5.1</strong> Emitir nota fiscal no valor informado pela Contratante após cada fechamento quinzenal, no prazo máximo de 2 dias úteis.</li>
             <li><strong>5.2</strong> Cumprir prazos e qualidade acordados na plataforma.</li>
-            <li><strong>5.3</strong> Manter sigilo sobre dados e informações da Contratante.</li>
+            <li><strong>5.3</strong> Manter sigilo sobre dados e informações da Contratante e dos clientes, nos termos da LGPD (Lei 13.709/2018).</li>
             <li><strong>5.4</strong> Manter sua regularidade fiscal e cadastral durante toda a vigência.</li>
+            <li><strong>5.5</strong> Utilizar EPI adequado e observar normas de segurança do trabalho (NR-6 e NR-12).</li>
           </ul>
         </section>
 
@@ -125,25 +128,34 @@ export default function TermosPrestador() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-foreground mb-2">11. Rescisão</h2>
-          <p className="text-muted-foreground">
-            Além do previsto na cláusula 4.4, o contrato será rescindido imediatamente por descumprimento grave de qualquer cláusula, uso indevido da marca ou condenação criminal relacionada à atividade.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-base font-bold text-foreground mb-2">12. Disposições Gerais</h2>
+          <h2 className="text-base font-bold text-foreground mb-2">11. Suspensão e Rescisão</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>12.1</strong> O Contratado declara que não mantém vínculo empregatício com a Contratante e que esta relação é regida pelo Código Civil e pela Lei 13.429/2017.</li>
-            <li><strong>12.2</strong> Alterações neste contrato somente terão validade mediante aditivo assinado pelas partes.</li>
-            <li><strong>12.3</strong> A tolerância de uma parte quanto ao descumprimento de qualquer obrigação não implica renúncia ao direito de exigi-la futuramente.</li>
+            <li><strong>11.1</strong> Além do previsto na cláusula 4.4, o contrato será rescindido imediatamente por descumprimento grave de qualquer cláusula, uso indevido da marca ou condenação criminal relacionada à atividade.</li>
+            <li><strong>11.2</strong> A Contratante poderá suspender temporariamente o acesso do Contratado à plataforma em caso de investigação de irregularidade, garantindo contraditório e ampla defesa.</li>
           </ul>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-foreground mb-2">13. Foro</h2>
+          <h2 className="text-base font-bold text-foreground mb-2">12. Proteção de Dados - LGPD</h2>
+          <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
+            <li><strong>12.1</strong> O Contratado autoriza o tratamento de seus dados pessoais pela Contratante, nos termos da Lei 13.709/2018 (LGPD) e do Decreto 10.022/2024, para fins de cadastro, pagamento, fiscalização e cumprimento de obrigações legais.</li>
+            <li><strong>12.2</strong> O Contratado compromete-se a tratar com sigilo os dados de clientes que acessar via plataforma, utilizando-os exclusivamente para execução do serviço, sob pena de responsabilização civil e criminal.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-base font-bold text-foreground mb-2">13. Disposições Gerais</h2>
+          <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
+            <li><strong>13.1</strong> O Contratado declara que não mantém vínculo empregatício com a Contratante e que esta relação é regida pelo Código Civil.</li>
+            <li><strong>13.2</strong> Alterações neste contrato somente terão validade mediante aditivo ou aceite eletrônico na plataforma.</li>
+            <li><strong>13.3</strong> A tolerância de uma parte quanto ao descumprimento de qualquer obrigação não implica renúncia ao direito de exigi-la futuramente.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-base font-bold text-foreground mb-2">14. Foro</h2>
           <p className="text-muted-foreground">
-            Fica eleito o foro de Betim/MG para dirimir quaisquer controvérsias oriundas deste contrato.
+            Fica eleito o foro de Betim/MG para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.
           </p>
         </section>
 
@@ -152,7 +164,7 @@ export default function TermosPrestador() {
             <strong>Betim/MG, 05 de maio de 2026.</strong>
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            Ao clicar em aceitar, você declara ter lido, compreendido e concordado com todos os termos e condições acima.
+            Ao clicar em aceitar, você declara ter lido, compreendido e concordado com todos os termos e condições acima, em conformidade com o Código Civil, o Marco Civil da Internet e a LGPD.
           </p>
         </div>
       </div>

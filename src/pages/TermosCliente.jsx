@@ -25,25 +25,29 @@ export default function TermosCliente() {
       <div className="space-y-4 text-sm text-foreground leading-relaxed">
 
         <section>
-          <h2 className="text-base font-bold text-foreground mb-3">PARTES</h2>
+          <h2 className="text-base font-bold text-foreground mb-3">PARTES E BASE LEGAL</h2>
           <p className="text-muted-foreground mb-2"><strong>INTERMEDIADORA:</strong> REPARO EXPRESSO TECNOLOGIA, CNPJ 39.973.464/0001-10, com sede na Rua Leozino de Oliveira, 273, Bairro Filadélfia, Betim, Minas Gerais, CEP 32670-054.</p>
-          <p className="text-muted-foreground"><strong>CLIENTE:</strong> Pessoa física ou jurídica que aceita este termo ao solicitar um serviço via plataforma/app Reparo Expresso.</p>
+          <p className="text-muted-foreground mb-2"><strong>CLIENTE:</strong> Pessoa física ou jurídica que aceita este termo eletronicamente ao solicitar um serviço via plataforma/app Reparo Expresso, qualificada pelos dados informados em seu cadastro.</p>
+          <p className="text-muted-foreground mb-2"><strong>NATUREZA JURÍDICA:</strong> Este instrumento é um contrato de intermediação de serviços, celebrado por meio eletrônico, nos termos do art. 421-L do Código Civil (Lei 10.406/2002), do Código de Defesa do Consumidor (Lei 8.078/1990), da Lei 12.965/2014 (Marco Civil da Internet) e da Lei 13.709/2018 (LGPD).</p>
+          <p className="text-muted-foreground"><strong>QUALIFICAÇÃO CONSUMERISTA:</strong> O CLIENTE é equiparado a consumidor nos termos do art. 2º do CDC, sendo a INTERMEDIADORA fornecedora de serviço de intermediação (art. 3º, CDC).</p>
         </section>
 
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">1. Objeto</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>1.1</strong> A REPARO EXPRESSO TECNOLOGIA conecta CLIENTE a prestadores autônomos para serviços residenciais de natureza rápida e emergencial.</li>
-            <li><strong>1.2</strong> Prazo de atendimento: O prazo estimado para chegada do prestador será informado na plataforma antes da confirmação do pagamento.</li>
+            <li><strong>1.1</strong> A REPARO EXPRESSO TECNOLOGIA é plataforma digital de intermediação que conecta CLIENTE a prestadores autônomos para serviços residenciais e veiculares de natureza rápida e emergencial, nos termos do art. 7º, I, do Marco Civil da Internet (Lei 12.965/2014).</li>
+            <li><strong>1.2</strong> A INTERMEDIADORA não é parte na relação de prestação de serviços entre CLIENTE e prestador, limitando-se a disponibilizar ambiente tecnológico para aproximação das partes, conforme art. 19 do Marco Civil da Internet.</li>
+            <li><strong>1.3</strong> Prazo de atendimento: O prazo estimado para chegada do prestador será informado na plataforma antes da confirmação do pagamento, constituindo informação essencial nos termos do art. 6º, III, do CDC.</li>
           </ul>
         </section>
 
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">2. Pagamento e Taxa de Urgência</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>2.1</strong> Valor do serviço: Apresentado na plataforma antes da confirmação, composto por: custo do serviço + taxa de intermediação da REPARO EXPRESSO TECNOLOGIA.</li>
-            <li><strong>2.2</strong> Taxa de emergência: Aplicável para chamados noturnos, fins de semana e feriados. O percentual de acréscimo será informado na plataforma antes da confirmação do chamado.</li>
+            <li><strong>2.1</strong> Valor do serviço: Apresentado na plataforma antes da confirmação, composto por: custo do serviço + taxa de intermediação da REPARO EXPRESSO TECNOLOGIA, garantindo ao CLIENTE informação clara e precisa sobre preço (art. 6º, III e IV, CDC).</li>
+            <li><strong>2.2</strong> Taxa de emergência: Aplicável para chamados noturnos, fins de semana e feriados. O percentual de acréscimo será informado na plataforma antes da confirmação do chamado, em conformidade com o art. 31 do CDC (oferta e informação).</li>
             <li><strong>2.3</strong> Pagamento 100% antecipado via plataforma. Sem pagamento, sem deslocamento.</li>
+            <li><strong>2.4</strong> O CLIENTE terá direito de arrependimento no prazo de 7 dias contados da contratação, exclusivamente para serviços agendados ainda não iniciados, conforme art. 49 do CDC. Para serviços imediatos já em execução, não há direito de arrependimento.</li>
           </ul>
         </section>
 
@@ -51,7 +55,7 @@ export default function TermosCliente() {
           <h2 className="text-base font-bold text-foreground mb-2">3. Escopo e Limites do Serviço Emergencial</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
             <li><strong>3.1</strong> Serviço emergencial = conter o problema. Não inclui reforma completa.</li>
-            <li><strong>3.2</strong> Se no local o prestador identificar necessidade além do emergencial, novo orçamento será gerado e aprovado pelo CLIENTE via app antes da execução.</li>
+            <li><strong>3.2</strong> Se no local o prestador identificar necessidade além do emergencial, novo orçamento será gerado e aprovado pelo CLIENTE via app antes da execução, garantindo o direito de escolha (art. 6º, II, CDC).</li>
             <li><strong>3.3</strong> Materiais: Não inclusos. Caso o prestador possua materiais disponíveis, os valores serão apresentados para aprovação via app antes do uso.</li>
           </ul>
         </section>
@@ -61,6 +65,7 @@ export default function TermosCliente() {
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
             <li><strong>4.1</strong> Cancelamento pelo CLIENTE após o prestador sair para o local: cobrança de taxa de deslocamento, cujo valor será informado na plataforma no momento do chamado.</li>
             <li><strong>4.2</strong> Atraso do prestador: Se o prestador não chegar no prazo informado no app, CLIENTE tem direito a estorno integral ou remarcação prioritária.</li>
+            <li><strong>4.3</strong> O cancelamento por iniciativa do CLIENTE antes do deslocamento do prestador garante estorno integral, deduzidas apenas taxas de processamento de pagamento eventualmente cobradas pelo gateway.</li>
           </ul>
         </section>
 
@@ -172,9 +177,10 @@ export default function TermosCliente() {
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">11. Responsabilidade e Garantia</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>11.1</strong> A REPARO EXPRESSO TECNOLOGIA não executa o serviço e não garante solução definitiva, apenas o atendimento emergencial inicial.</li>
-            <li><strong>11.2</strong> Garantia: Prazo informado na plataforma no momento da contratação, aplicável apenas ao serviço emergencial executado, não para problemas preexistentes.</li>
+            <li><strong>11.1</strong> A REPARO EXPRESSO TECNOLOGIA, na qualidade de intermediadora tecnológica, não executa o serviço e não garante solução definitiva, apenas o atendimento emergencial inicial, conforme art. 19 do Marco Civil da Internet.</li>
+            <li><strong>11.2</strong> Garantia: Prazo informado na plataforma no momento da contratação, aplicável apenas ao serviço emergencial executado, não para problemas preexistentes, em conformidade com o art. 18 do CDC (vício do produto/serviço).</li>
             <li><strong>11.3</strong> Seguro: Cobertura informada na plataforma, para danos causados comprovadamente pelo prestador durante o atendimento.</li>
+            <li><strong>11.4</strong> A responsabilidade da INTERMEDIADORA limita-se à intermediação, nos termos do art. 19 do Marco Civil da Internet, não respondendo por atos dos prestadores autônomos.</li>
           </ul>
         </section>
 
@@ -182,35 +188,69 @@ export default function TermosCliente() {
           <h2 className="text-base font-bold text-foreground mb-2">12. Não Aliciamento</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
             <li><strong>12.1</strong> CLIENTE se compromete a não contratar o mesmo prestador por fora da plataforma pelo prazo informado no app, sob multa também informada na plataforma.</li>
+            <li><strong>12.2</strong> A prática de aliciamento configura quebra de confiança e infração contratual, sujeitando o CLIENTE às sanções previstas na cláusula 14.</li>
           </ul>
         </section>
 
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">13. Proteção de Dados - LGPD</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>13.1</strong> COLETA DE DADOS: A REPARO EXPRESSO TECNOLOGIA coleta e trata dados pessoais do CLIENTE necessários para execução do contrato, incluindo: nome, CPF, telefone, endereço do serviço, geolocalização e dados de pagamento, nos termos da Lei 13.709/2018.</li>
-            <li><strong>13.2</strong> FINALIDADE: Os dados serão usados exclusivamente para: conectar CLIENTE ao prestador, processar pagamento, emitir nota fiscal, garantir segurança da operação, suporte e cumprimento de obrigação legal.</li>
-            <li><strong>13.3</strong> COMPARTILHAMENTO: Dados de endereço e telefone serão compartilhados apenas com o prestador designado para o chamado. Dados de pagamento são tratados por gateway terceirizado e não ficam armazenados pela REPARO EXPRESSO TECNOLOGIA.</li>
-            <li><strong>13.4</strong> REGISTROS: Imagens, vídeos e áudios capturados pelo prestador no local via app servem como prova de execução, recusa justificada ou condições do imóvel, e poderão ser usados em defesa judicial ou administrativa.</li>
-            <li><strong>13.5</strong> DIREITOS DO TITULAR: O CLIENTE pode solicitar a qualquer momento: confirmação de tratamento, acesso, correção, anonimização, bloqueio ou eliminação de dados, através do canal [inserir email].</li>
-            <li><strong>13.6</strong> RETENÇÃO: Dados serão mantidos pelo prazo necessário para cumprimento do contrato, garantia, obrigação legal ou defesa em processo, após o qual serão eliminados.</li>
-            <li><strong>13.7</strong> SEGURANÇA: A REPARO EXPRESSO TECNOLOGIA adota medidas técnicas e administrativas para proteger os dados contra acessos não autorizados, incidentes e vazamentos.</li>
-            <li><strong>13.8</strong> CONSENTIMENTO: Ao aceitar este contrato, o CLIENTE consente expressamente com a coleta e tratamento dos dados conforme esta cláusula.</li>
+            <li><strong>13.1</strong> COLETA DE DADOS: A REPARO EXPRESSO TECNOLOGIA coleta e trata dados pessoais do CLIENTE necessários para execução do contrato, incluindo: nome, CPF, telefone, endereço do serviço, geolocalização e dados de pagamento, nos termos da Lei 13.709/2018 (LGPD) e do Decreto 10.022/2024.</li>
+            <li><strong>13.2</strong> BASES LEGAIS: O tratamento ocorre com fundamento no art. 7º da LGPD, especialmente: execução de contrato (inciso V), cumprimento de obrigação legal (inciso II) e exercício regular de direitos (inciso VI).</li>
+            <li><strong>13.3</strong> FINALIDADE: Os dados serão usados exclusivamente para: conectar CLIENTE ao prestador, processar pagamento, emitir nota fiscal, garantir segurança da operação, suporte e cumprimento de obrigação legal.</li>
+            <li><strong>13.4</strong> COMPARTILHAMENTO: Dados de endereço e telefone serão compartilhados apenas com o prestador designado para o chamado. Dados de pagamento são tratados por gateway terceirizado e não ficam armazenados pela REPARO EXPRESSO TECNOLOGIA.</li>
+            <li><strong>13.5</strong> REGISTROS: Imagens, vídeos e áudios capturados pelo prestador no local via app servem como prova de execução, recusa justificada ou condições do imóvel, e poderão ser usados em defesa judicial ou administrativa, conforme art. 7º, III, da LGPD.</li>
+            <li><strong>13.6</strong> DIREITOS DO TITULAR: O CLIENTE pode solicitar a qualquer momento: confirmação de tratamento, acesso, correção, anonimização, bloqueio, portabilidade ou eliminação de dados, através do canal de suporte da plataforma, nos termos dos arts. 17 e 18 da LGPD.</li>
+            <li><strong>13.7</strong> RETENÇÃO: Dados serão mantidos pelo prazo necessário para cumprimento do contrato, garantia, obrigação legal ou defesa em processo, após o qual serão eliminados, conforme art. 16 da LGPD.</li>
+            <li><strong>13.8</strong> SEGURANÇA: A REPARO EXPRESSO TECNOLOGIA adota medidas técnicas e administrativas para proteger os dados contra acessos não autorizados, incidentes e vazamentos, conforme art. 46 da LGPD.</li>
+            <li><strong>13.9</strong> CONSENTIMENTO: Ao aceitar este contrato, o CLIENTE consente expressamente com a coleta e tratamento dos dados conforme esta cláusula, podendo revogar o consentimento a qualquer momento (art. 8º, § 5º, LGPD).</li>
           </ul>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-foreground mb-2">14. Aceite e Foro</h2>
+          <h2 className="text-base font-bold text-foreground mb-2">14. Blacklist, Suspensão e Recusa de Novos Chamados</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>14.1</strong> Ao solicitar o chamado e confirmar o pagamento, o CLIENTE declara que leu, compreendeu e concorda com todos os termos deste contrato.</li>
-            <li><strong>14.2</strong> Este contrato tem validade a partir da data do aceite eletrônico na plataforma Reparo Expresso.</li>
-            <li><strong>14.3</strong> Fica eleito o foro da comarca de Betim/MG para dirimir quaisquer dúvidas ou litígios decorrentes deste contrato.</li>
+            <li><strong>14.1</strong> A REPARO EXPRESSO TECNOLOGIA reserva-se o direito de incluir o nome, CPF/CNPJ e dados de contato do CLIENTE em lista interna de restrição (blacklist) e recusar a abertura de novos chamados, nas hipóteses de:
+              <ul className="list-[lower-alpha] list-inside ml-4 mt-1 space-y-0.5">
+                <li>Cancelamento reiterado de chamados após deslocamento do prestador, configurando abuso de direito (art. 187 do Código Civil).</li>
+                <li>Ausência injustificada no local do serviço por mais de 15 minutos, em mais de uma ocorrência.</li>
+                <li>Comprovada prática de aliciamento de prestadores, nos termos da cláusula 12.</li>
+                <li>Comportamento agressivo, ameaça, discriminação ou assédio contra prestadores ou equipe de suporte.</li>
+                <li>Fraude, chargeback indevido, pagamento fraudulento ou tentativa de burlar a plataforma.</li>
+                <li>Falsificação de informações de cadastro ou uso indevido de conta de terceiros.</li>
+                <li>Violação reiterada dos termos deste contrato.</li>
+              </ul>
+            </li>
+            <li><strong>14.2</strong> A inclusão em blacklist será comunicada ao CLIENTE por meio eletrônico, com indicação do motivo e prazo para defesa, garantindo ampla defesa e contraditório (art. 5º, LV, da Constituição Federal).</li>
+            <li><strong>14.3</strong> O CLIENTE poderá apresentar manifestação de defesa no prazo de 7 dias corridos contados da comunicação, através do canal de suporte da plataforma.</li>
+            <li><strong>14.4</strong> A permanência em blacklist não impede o exercício dos direitos do titular de dados (LGPD) nem isenta o CLIENTE de eventuais débitos pendentes.</li>
+            <li><strong>14.5</strong> A REPARO EXPRESSO TECNOLOGIA poderá, a seu critério, reverter a inclusão em blacklist após análise da defesa e regularização dos débitos e comportamentos que motivaram a restrição.</li>
+            <li><strong>14.6</strong> A recusa de novos chamados não configura discriminação ilícita, tratando-se de exercício regular de direito da INTERMEDIADORA de selecionar com quem mantém relação contratual, conforme art. 421 do Código Civil e princípios da boa-fé objetiva.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-base font-bold text-foreground mb-2">15. Resolução de Conflitos</h2>
+          <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
+            <li><strong>15.1</strong> Em conformidade com o art. 6º, VII, do CDC, o CLIENTE tem acesso aos órgãos administrativos de defesa do consumidor (Procon e Delegacias de Proteção e Defesa do Consumidor).</li>
+            <li><strong>15.2</strong> As partes elegeram como meio alternativo de solução de controvérsias a plataforma Reclame Aqui e/ou câmaras de mediação, que poderão ser utilizadas antes do ajuizamento de ações judiciais.</li>
+            <li><strong>15.3</strong> Eventuais demandas judiciais serão dirimidas pelo foro da comarca de Betim/MG, com renúncia a qualquer outro, por mais privilegiado que seja.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-base font-bold text-foreground mb-2">16. Aceite e Vigência</h2>
+          <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
+            <li><strong>16.1</strong> Ao solicitar o chamado e confirmar o pagamento, o CLIENTE declara que leu, compreendeu e concorda com todos os termos deste contrato, em conformidade com o art. 434 do Código Civil (aceitação eletrônica).</li>
+            <li><strong>16.2</strong> Este contrato tem validade a partir da data do aceite eletrônico na plataforma Reparo Expresso e permanece vigente por prazo indeterminado, aplicando-se a todos os chamados efetuados durante sua vigência.</li>
+            <li><strong>16.3</strong> Alterações nos termos serão comunicadas via app, considerando-se aceitas com o primeiro chamado posterior à notificação, conforme art. 115 do Código Civil.</li>
+            <li><strong>16.4</strong> Fica eleito o foro da comarca de Betim/MG para dirimir quaisquer dúvidas ou litígios decorrentes deste contrato.</li>
           </ul>
         </section>
 
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-6">
           <p className="text-xs text-muted-foreground">
-            Ao clicar em aceitar e confirmar seu pagamento, você declara que leu, compreendeu e concordou com todos os termos e condições acima.
+            Ao clicar em aceitar e confirmar seu pagamento, você declara que leu, compreendeu e concordou com todos os termos e condições acima, em conformidade com o Código Civil, o Código de Defesa do Consumidor, o Marco Civil da Internet e a LGPD.
           </p>
         </div>
       </div>
