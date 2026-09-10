@@ -39,7 +39,10 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, presel
         setOsList(valid);
         if (preselectOsId) {
           const match = valid.find(os => os.id === preselectOsId);
-          if (match && !cancelled) setSelectedOs(match);
+          if (match && !cancelled) {
+            setSelectedOs(match);
+            autoFillFromOs(match);
+          }
         }
       } catch (e) {
         if (!cancelled) setOsError('Erro ao carregar atendimentos. Tente novamente.');
@@ -50,6 +53,23 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, presel
     loadOs();
     return () => { cancelled = true; };
   }, [isOpen, preselectOsId]);
+
+  const autoFillFromOs = (os) => {
+    if (!os) return;
+    if (os.problem_photos?.length > 0) setFotos(os.problem_photos);
+    if (os.description) setPecas(os.description);
+    if (os.store_address) {
+      setLoja('Loja específica (informar endereço)');
+      const storeStr = [
+        os.store_address,
+        os.store_number ? `, ${os.store_number}` : '',
+        os.store_neighborhood ? ` — ${os.store_neighborhood}` : '',
+        os.store_city ? `, ${os.store_city}` : '',
+        os.store_state ? `/${os.store_state}` : '',
+      ].filter(Boolean).join('');
+      setLojaOutra(storeStr);
+    }
+  };
 
   const lojasSugeridas = [
     'Loja mais próxima (motoboy escolhe)',
@@ -250,20 +270,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, presel
                             setSelectedOs(os);
                             setShowOsPicker(false);
                             setSearchTerm('');
-                            // Auto-preenche do atendimento original
-                            if (os.problem_photos?.length > 0) setFotos(os.problem_photos);
-                            if (os.description) setPecas(os.description);
-                            if (os.store_address) {
-                              setLoja('Loja específica (informar endereço)');
-                              const storeStr = [
-                                os.store_address,
-                                os.store_number ? `, ${os.store_number}` : '',
-                                os.store_neighborhood ? ` — ${os.store_neighborhood}` : '',
-                                os.store_city ? `, ${os.store_city}` : '',
-                                os.store_state ? `/${os.store_state}` : '',
-                              ].filter(Boolean).join('');
-                              setLojaOutra(storeStr);
-                            }
+                            autoFillFromOs(os);
                           }}
                           className={cn(
                             "w-full text-left p-3 rounded-xl border-2 transition-all",
