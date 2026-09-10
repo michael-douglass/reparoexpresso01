@@ -15,6 +15,18 @@ export default function TermosPrestador() {
         </div>
       </div>
 
+      <div className="bg-destructive/10 border-2 border-destructive/40 rounded-2xl p-4 mb-4">
+        <div className="flex items-start gap-3">
+          <Shield className="w-6 h-6 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <h2 className="text-base font-bold text-destructive mb-1">⚠️ AVISO IMPORTANTE — SÓ ATENDEMOS EMERGÊNCIAS</h2>
+            <p className="text-sm text-foreground font-semibold">
+              A Reparo Expresso atende <strong className="text-destructive">EXCLUSIVAMENTE serviços rápidos e emergenciais</strong>. <strong>NÃO aceitamos pré-obra, obra, reforma, construção ou demolição</strong>. Você, prestador, está autorizado a recusar qualquer chamado que configure obra e encerrá-lo no local com cobrança da taxa de deslocamento. NÃO inicie qualquer serviço que envolva obra.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
         <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
@@ -35,7 +47,7 @@ export default function TermosPrestador() {
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">2. Objeto</h2>
           <p className="text-muted-foreground">
-            Prestação de serviços de natureza residencial e veicular emergencial através da plataforma, sem subordinação jurídica, com autonomia do Contratado para aceitar ou recusar chamados, nos termos do art. 442-B da CLT e do art. 593 do Código Civil.
+            Prestação de serviços de natureza residencial e veicular <strong className="text-foreground">EXCLUSIVAMENTE emergencial e rápida</strong> através da plataforma, sem subordinação jurídica, com autonomia do Contratado para aceitar ou recusar chamados, nos termos do art. 442-B da CLT e do art. 593 do Código Civil. <strong className="text-foreground">A plataforma NÃO realiza pré-obra, obra, reforma, construção ou demolição</strong>. O Contratado está expressamente autorizado a recusar e encerrar qualquer chamado que configure obra, cobrando a taxa de deslocamento.
           </p>
         </section>
 

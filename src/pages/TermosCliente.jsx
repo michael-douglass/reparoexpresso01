@@ -15,6 +15,18 @@ export default function TermosCliente() {
         </div>
       </div>
 
+      <div className="bg-destructive/10 border-2 border-destructive/40 rounded-2xl p-4 mb-4">
+        <div className="flex items-start gap-3">
+          <Shield className="w-6 h-6 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <h2 className="text-base font-bold text-destructive mb-1">⚠️ AVISO IMPORTANTE — SÓ FAZEMOS EMERGÊNCIAS</h2>
+            <p className="text-sm text-foreground font-semibold">
+              A Reparo Expresso atende <strong className="text-destructive">EXCLUSIVAMENTE serviços rápidos e emergenciais</strong>. <strong>NÃO fazemos pré-obra, obra, reforma, construção ou demolição</strong>. Se você precisa de qualquer serviço que envolva obra, contrate um profissional especializado por sua conta. Chamados fora do escopo serão cancelados no local com cobrança da taxa de deslocamento.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
         <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
@@ -35,7 +47,7 @@ export default function TermosCliente() {
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">1. Objeto</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>1.1</strong> A REPARO EXPRESSO TECNOLOGIA é plataforma digital de intermediação que conecta CLIENTE a prestadores autônomos para serviços residenciais e veiculares de natureza rápida e emergencial, nos termos do art. 7º, I, do Marco Civil da Internet (Lei 12.965/2014).</li>
+            <li><strong>1.1</strong> A REPARO EXPRESSO TECNOLOGIA é plataforma digital de intermediação que conecta CLIENTE a prestadores autônomos <strong className="text-foreground">EXCLUSIVAMENTE para serviços rápidos e emergenciais</strong>. A plataforma <strong className="text-foreground">NÃO realiza pré-obra, obra, reforma, construção ou demolição</strong> sob nenhuma hipótese, nos termos do art. 7º, I, do Marco Civil da Internet (Lei 12.965/2014).</li>
             <li><strong>1.2</strong> A INTERMEDIADORA não é parte na relação de prestação de serviços entre CLIENTE e prestador, limitando-se a disponibilizar ambiente tecnológico para aproximação das partes, conforme art. 19 do Marco Civil da Internet.</li>
             <li><strong>1.3</strong> Prazo de atendimento: O prazo estimado para chegada do prestador será informado na plataforma antes da confirmação do pagamento, constituindo informação essencial nos termos do art. 6º, III, do CDC.</li>
           </ul>
@@ -54,7 +66,7 @@ export default function TermosCliente() {
         <section>
           <h2 className="text-base font-bold text-foreground mb-2">3. Escopo e Limites do Serviço Emergencial</h2>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-            <li><strong>3.1</strong> Serviço emergencial = conter o problema. Não inclui reforma completa.</li>
+            <li><strong>3.1</strong> Serviço emergencial = <strong className="text-foreground">conter o problema rapidamente</strong>. <strong className="text-foreground">NÃO inclui pré-obra, obra, reforma, construção ou demolição</strong>. O atendimento é pontual, focado em resolver a emergência, não em executar projetos ou reformas.</li>
             <li><strong>3.2</strong> Se no local o prestador identificar necessidade além do emergencial, novo orçamento será gerado e aprovado pelo CLIENTE via app antes da execução, garantindo o direito de escolha (art. 6º, II, CDC).</li>
             <li><strong>3.3</strong> Materiais: Não inclusos. Caso o prestador possua materiais disponíveis, os valores serão apresentados para aprovação via app antes do uso.</li>
           </ul>
