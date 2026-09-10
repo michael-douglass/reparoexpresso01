@@ -15,153 +15,94 @@ export default function ProviderTermsManager() {
   const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [notifySummary, setNotifySummary] = useState('');
 
-  const DEFAULT_TERMS = `TERMOS DE SERVIÇO PARA PRESTADORES
+  const DEFAULT_TERMS = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS - PRESTADOR
 
-1. Aceitação dos Termos
-Ao se cadastrar na plataforma Reparo Expresso, você concorda em cumprir todos os termos e condições descritos neste documento. Estes termos regem o relacionamento entre você (prestador) e a plataforma.
+⚠️ AVISO IMPORTANTE — SÓ ATENDEMOS EMERGÊNCIAS
+A Reparo Expresso atende EXCLUSIVAMENTE serviços rápidos e emergenciais. NÃO aceitamos pré-obra, obra, reforma, construção ou demolição. Você, prestador, está autorizado a recusar qualquer chamado que configure obra e encerrá-lo no local com cobrança da taxa de deslocamento. NÃO inicie qualquer serviço que envolva obra.
 
-2. Responsabilidades do Prestador
-Como prestador de serviço, você é responsável por:
-- Realizar serviços de qualidade dentro do escopo definido
-- Manter profissionalismo e educação com os clientes
-- Cumprir os horários agendados ou informar com antecedência
-- Respeitar a privacidade e propriedade do cliente
-- Manter seus dados e documentação atualizados
-- Seguir todas as normas de segurança e saúde
+1. PARTES E BASE LEGAL
+Contratante: REPARO EXPRESSO TECNOLOGIA, CNPJ 39.973.464/0001-10, com sede na Rua Leozino de Oliveira, 273, Filadélfia, Betim/MG, CEP 32670-054.
+Contratado: Prestador de serviços, pessoa física ou jurídica, qualificado pelos dados informados em seu cadastro.
+NATUREZA JURÍDICA: Contrato de prestação de serviços autônomos, sem vínculo empregatício, regido pelo Código Civil (Lei 10.406/2002), Marco Civil da Internet (Lei 12.965/2014) e LGPD (Lei 13.709/2018).
+INEXISTÊNCIA DE VÍNCULO: A relação não configura vínculo empregatício (art. 442-B da CLT).
 
-3. Aceitação e Recusa de Serviços
-Você tem a liberdade de aceitar ou recusar serviços oferecidos pela plataforma. No entanto, recusas frequentes podem afetar sua visibilidade na plataforma. Após iniciar o deslocamento para o local do cliente, você não pode recusar o serviço.
+2. OBJETO
+Prestação de serviços de natureza residencial e veicular EXCLUSIVAMENTE emergencial e rápida, sem subordinação jurídica, com autonomia do Contratado para aceitar ou recusar chamados. A plataforma NÃO realiza pré-obra, obra, reforma, construção ou demolição. O Contratado está autorizado a recusar e encerrar qualquer chamado que configure obra, cobrando a taxa de deslocamento.
 
-4. Avaliações e Reputação
-Os clientes podem avaliar seu trabalho. Sua reputação é importante e avaliações negativas podem resultar em redução de visibilidade ou suspensão da conta. Você pode responder às avaliações de forma profissional.
-
-5. Conduta Profissional
-Você concorda em:
-- Não discriminar clientes por raça, gênero, religião ou origem
-- Não ofender, assediar ou ameaçar clientes
-- Não fazer propaganda de serviços fora da plataforma para reduzir comissão
-- Manter sigilo sobre informações pessoais do cliente
-- Usar equipamento de segurança adequado
-
-6. Documentação e Verificação
-Você deve manter toda documentação atualizada e válida (CNH, CRLV, documentos de identidade). A plataforma pode solicitar verificação de documentos a qualquer momento.
-
-7. Suspensão e Bloqueio
-A plataforma pode suspender ou bloquear sua conta se:
-- Violar estes termos
-- Receber múltiplas avaliações negativas
-- Causar danos ao cliente ou suas propriedades
-- Não manter documentação válida
-- Cometer fraude ou atividade ilegal
-
-8. Comissão, Pagamento e Requisitos Fiscais
-Os valores de comissão e condições de pagamento são definidos pela plataforma e podem sofrer alterações mediante notificação prévia. O pagamento é realizado via PIX conforme agenda estabelecida.
+3. REMUNERAÇÃO
+3.1 Remuneração exclusivamente por serviço efetivamente realizado e concluído através da plataforma.
+3.2 Fechamento quinzenal. Após envio da nota fiscal, pagamento em até 7 dias corridos via PIX ou TED.
+3.3 Não há garantia de valor mínimo ou pagamento por período à disposição.
+3.4 Tributos incidentes são de responsabilidade exclusiva do Contratado.
 
 OBRIGATORIEDADE DE PJ E NOTA FISCAL:
-O PRESTADOR DECLARA ESTAR PLENAMENTE CIENTE E CONCORDA EXPRESSAMENTE COM OS SEGUINTES REQUISITOS COMO PRÉ-CONDIÇÃO PARA O RECEBIMENTO DOS VALORES PELOS SERVIÇOS PRESTADOS:
+A) ABERTURA DE PESSOA JURÍDICA (PJ): É OBRIGATÓRIO abrir CNPJ (MEI, EIRELI ou outra modalidade) para operar na plataforma.
+B) EMISSÃO DE NOTA FISCAL (NF): É OBRIGATÓRIO emitir NF para cada serviço executado.
+C) PRÉ-REQUISITO PARA RECEBIMENTO: A NF é pré-requisito obrigatório para recebimento. Sem NF válida, o pagamento é retido.
+D) RESPONSABILIDADES FISCAIS: O prestador é 100% responsável por todas as obrigações fiscais, tributárias e previdenciárias.
 
-A) ABERTURA DE PESSOA JURÍDICA (PJ):
-- É OBRIGATÓRIO abrir uma Pessoa Jurídica (empresa - CNPJ) em seu nome para continuar operando na plataforma
-- A PJ pode ser constituída como Microempreendedor Individual (MEI), Empresa Individual de Responsabilidade Limitada (EIRELI) ou outra modalidade permitida
-- O registro da PJ e apresentação do CNPJ são requisitos de cadastro e manutenção de conta ativa
+4. PRAZO E VIGÊNCIA
+4.1 Vigência de 12 meses a partir do aceite eletrônico, renovada automaticamente.
+4.2 Rescisão a qualquer tempo, mediante aviso prévio de 30 dias.
 
-B) EMISSÃO DE NOTA FISCAL (NF):
-- É OBRIGATÓRIO emitir Nota Fiscal eletrônica (NFe) ou Recibo (RPS) para CADA serviço executado através da plataforma
-- A Nota Fiscal deve indicar corretamente o serviço realizado, data, valor e dados da plataforma como tomadora
-- A emissão de NF é responsabilidade exclusiva do prestador e deve estar em conformidade com as normas da Receita Federal
+5. OBRIGAÇÕES DO CONTRATADO
+5.1 Emitir nota fiscal no prazo máximo de 2 dias úteis após cada fechamento quinzenal.
+5.2 Cumprir prazos e qualidade acordados na plataforma.
+5.3 Manter sigilo sobre dados e informações (LGPD).
+5.4 Manter regularidade fiscal e cadastral.
+5.5 Utilizar EPI adequado e observar normas de segurança do trabalho (NR-6 e NR-12).
 
-C) PRÉ-REQUISITO PARA RECEBIMENTO:
-- A Nota Fiscal é PRÉ-REQUISITO OBRIGATÓRIO para o recebimento de qualquer valor
-- A plataforma repassará os valores APENAS APÓS recebimento, validação e processamento da Nota Fiscal correspondente
-- Sem a Nota Fiscal válida, o pagamento é RETIDO até a regularização
+6. INDEPENDÊNCIA E AUTONOMIA
+6.1 O Contratado atua com total autonomia, sem subordinação jurídica.
+6.2 Liberdade plena para aceitar ou recusar serviços, sem penalidade.
+6.3 O Contratado define sua própria agenda e horários.
+6.4 Não há exclusividade. Pode prestar serviços para terceiros.
 
-D) RESPONSABILIDADES FISCAIS E TRIBUTÁRIAS:
-- O prestador é 100% responsável pelo cumprimento de todas as obrigações fiscais, tributárias e previdenciárias de sua PJ
-- Inclui-se: recolhimento de impostos, contribuições previdenciárias (INSS), tributos municipais e estaduais
-- A plataforma não se responsabiliza por multas, juros ou penalidades fiscais decorrentes de irregularidade do prestador
+7. PADRONIZAÇÃO E IMAGEM
+7.1 Uso de uniforme e plotagem nos veículos conforme manual da Contratante.
+7.2 Custos de aquisição do uniforme e plotagem suportados pela Contratante.
+7.3 Em caso de rescisão, devolver uniformes e remover plotagem em 5 dias úteis.
 
-9. Fundo de Reserva
-A plataforma retém 3% (três por cento) do valor total de cada serviço executado pelo prestador como Fundo de Reserva. Este fundo serve para:
-- Garantir a qualidade e conformidade dos serviços prestados
-- Cobrir custos com reclamações, danos ou não conformidades
-- Manter um fundo de proteção ao cliente
-- Subsidiar bonus e incentivos para prestadores de excelência
+8. QUALIDADE E REFAÇÃO DE SERVIÇOS
+8.1 Se o serviço apresentar vício ou falha, a Contratante poderá acionar outro prestador para refazê-lo.
+8.2 O Contratado que executou o serviço com falha não fará jus ao recebimento daquele atendimento.
+8.3 Recusa do cliente registrada na plataforma. Contestação em até 48h.
 
-O Fundo de Reserva é mantido em conta específica e o prestador pode consultar seu saldo a qualquer momento através da plataforma. Saldos não utilizados após 12 meses inativo são automaticamente revertidos para a plataforma.
+9. RESPONSABILIDADE POR VALORES E INDENIZAÇÃO
+9.1 Vedado ao Contratado receber valor diretamente do cliente final.
+9.2 Saque ou retenção indevida obriga restituição integral em 48h.
+9.3 Prática constitui falta grave e autoriza rescisão imediata por justa causa.
 
-10. Bônus e Incentivos
-A plataforma oferece sistema de bônus e incentivos baseado em:
-- Avaliações e satisfação do cliente
-- Cumprimento de metas de qualidade
-- Velocidade e eficiência nos atendimentos
-- Nível alcançado (Bronze, Prata, Ouro, Platina)
+10. FUNDO DE RESERVA
+10.1 Retenção de 3% do valor bruto dos serviços para fundo de reserva.
+10.2 O fundo funciona também como poupança do Contratado.
+10.3 Devolução do saldo após prazo de garantia de 3 meses do desligamento.
 
-Os bônus são custeados parcialmente com o Fundo de Reserva retido dos prestadores e podem ser creditados na carteira do prestador ou deduzidos dos próximos repasses.
+11. BÔNUS E INCENTIVOS
+A plataforma oferece sistema de bônus baseado em avaliações, metas de qualidade e nível alcançado (Bronze, Prata, Ouro, Platina).
 
-11. Uniforme, Padronização e Identificação Veicular
+12. SUSPENSÃO E RESCISÃO
+12.1 Rescisão imediata por descumprimento grave, uso indevido da marca ou condenação criminal.
+12.2 Suspensão temporária em caso de investigação de irregularidade, garantindo contraditório.
 
-A. UNIFORME OBRIGATÓRIO:
-Para padronização e segurança de nossos clientes, todos os prestadores são EXPRESSAMENTE OBRIGADOS a:
-- Usar o uniforme da plataforma em TODOS os atendimentos realizados
-- Manter o uniforme em perfeito estado de conservação, limpeza e higiene
-- Exibir permanentemente o crachá identificador da plataforma durante os serviços
-- A não conformidade com esta exigência pode resultar em suspensão ou bloqueio de conta
+13. EXIGÊNCIA DE MAIOR DE IDADE NA RESIDÊNCIA DO CLIENTE
+O prestador NÃO PODE, SOB NENHUMA CIRCUNSTÂNCIA, entrar na residência do cliente se não houver um MAIOR DE IDADE (18 anos ou mais) presente.
+Procedimento: recusar o serviço, informar via app e retirar-se do local. A plataforma cobrará do cliente a taxa de deslocamento.
+Não há exceções. A presença de menores acompanhados apenas por outros menores NÃO atende ao requisito.
 
-O uniforme pode ser adquirido pela plataforma ou fornecido pelo prestador conforme especificações aprovadas. Custos de aquisição e reposição são responsabilidade do prestador.
+14. PROTEÇÃO DE DADOS - LGPD
+14.1 O Contratado autoriza o tratamento de seus dados nos termos da Lei 13.709/2018.
+14.2 O Contratado compromete-se a tratar com sigilo os dados de clientes acessados via plataforma.
 
-B. PLOTAGEM DE VEÍCULO - BENEFÍCIO PARA PRESTADORES "PADRÃO":
-Prestadores que atingem o nível "Padrão" da plataforma (nível máximo de excelência) receberão como benefício exclusivo:
+15. SEGURO E RESPONSABILIDADE
+O prestador é responsável por manter seguro adequado para sua atividade. A plataforma não se responsabiliza por danos causados por negligência.
 
-BENEFÍCIO:
-- Direito a plotagem (adesivo) do nome, logo e cores da plataforma em seu veículo pessoal
-- A plotagem será executada SEM CUSTOS para a plataforma (custos a cargo do prestador)
-- Este é um benefício exclusivo que reforça a marca e gera visibilidade da plataforma
+16. DISPOSIÇÕES GERAIS
+16.1 O Contratado declara não manter vínculo empregatício com a Contratante.
+16.2 Alterações somente mediante aditivo ou aceite eletrônico na plataforma.
 
-PROPRIEDADE E RESPONSABILIDADES:
-- A plotagem permanece PROPRIEDADE INTELECTUAL da plataforma
-- O veículo plotado não pode ser utilizado para concorrência ou atividades conflitantes
-- O prestador é responsável por manter a plotagem em bom estado durante sua vigência
-- Reparos, reposição ou manutenção da plotagem são custos do prestador
-
-TÉRMINO DO BENEFÍCIO:
-- Caso o prestador deixe de ser "Padrão" (redução de nível), o benefício é revogado
-- Caso a conta seja bloqueada ou cancelada, o benefício é revogado imediatamente
-- O prestador tem PRAZO DE 30 DIAS para remover completamente a plotagem do veículo
-- Veículos que mantiverem plotagem após este prazo podem ser reportados, prejudicando reputação do prestador
-- A plataforma pode solicitar comprovante fotográfico de remoção da plotagem
-
-12. Exigência de Maior de Idade na Residência do Cliente
-
-REQUISITO OBRIGATÓRIO:
-O prestador NÃO PODE, SOB NENHUMA CIRCUNSTÂNCIA, entrar na residência ou local de trabalho do cliente se não houver um MAIOR DE IDADE (18 anos ou mais) presente para acompanhar os serviços.
-
-PROCEDIMENTO EM CASO DE NÃO CONFORMIDADE:
-- Caso o prestador chegue ao local de atendimento e encontre APENAS menores de idade presentes:
-  1. O prestador se recusa a executar o serviço
-  2. O prestador informa ao cliente via aplicativo que o serviço não pode ser realizado por falta de responsável
-  3. O prestador se retira imediatamente do local SEM EXECUTAR QUALQUER ATIVIDADE
-
-COBRANÇAS E PENALIDADES:
-- A plataforma COBRARÁ do cliente o valor total da VISITA/DESLOCAMENTO como ato falho do cliente
-- O cliente NÃO TERÁ DIREITO a retorno ou agendamento sem custos adicionais
-- O prestador receberá normalmente o valor de sua comissão pela visita realizada (deslocamento)
-- O cliente deverá reagendar o serviço com um responsável adulto presente
-
-EXCEÇÕES:
-- Não há exceções para esta regra
-- A presença de menores acompanhados apenas por outros menores NÃO atende ao requisito
-- Apenas maiores de idade legalmente responsáveis são aceitos
-
-RESPONSABILIDADE DO CLIENTE:
-- É exclusivamente responsabilidade do cliente garantir que um maior de idade esteja presente
-- A plataforma notifica o cliente desta exigência no momento da solicitação do serviço
-- O cliente concorda tacitamente com esta regra ao solicitar o serviço
-
-13. Seguro e Responsabilidade
-Você é responsável por manter seguro adequado para sua atividade. A plataforma não se responsabiliza por danos causados por negligência do prestador ou por uso indevido de equipamento.
-
-14. Modificação dos Termos
-A plataforma pode modificar estes termos a qualquer momento. Modificações serão notificadas aos prestadores. O uso contínuo da plataforma após as modificações constitui aceitação dos novos termos.`;
+17. FORO
+Fica eleito o foro de Betim/MG para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro.`;
 
   useEffect(() => {
     const stored = localStorage.getItem('provider_terms_content');
