@@ -106,6 +106,14 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, presel
       provider_id: selectedOs.provider_id,
       provider_name: selectedOs.provider_name,
       provider_phone: selectedOs.provider_phone,
+      store_address: selectedOs.store_address || '',
+      store_number: selectedOs.store_number || '',
+      store_neighborhood: selectedOs.store_neighborhood || '',
+      store_city: selectedOs.store_city || '',
+      store_state: selectedOs.store_state || '',
+      store_cep: selectedOs.store_cep || '',
+      store_latitude: selectedOs.store_latitude || null,
+      store_longitude: selectedOs.store_longitude || null,
     });
   };
 
@@ -238,7 +246,25 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, presel
                       {filteredOs.map(os => (
                         <button
                           key={os.id}
-                          onClick={() => { setSelectedOs(os); setShowOsPicker(false); setSearchTerm(''); }}
+                          onClick={() => {
+                            setSelectedOs(os);
+                            setShowOsPicker(false);
+                            setSearchTerm('');
+                            // Auto-preenche do atendimento original
+                            if (os.problem_photos?.length > 0) setFotos(os.problem_photos);
+                            if (os.description) setPecas(os.description);
+                            if (os.store_address) {
+                              setLoja('Loja específica (informar endereço)');
+                              const storeStr = [
+                                os.store_address,
+                                os.store_number ? `, ${os.store_number}` : '',
+                                os.store_neighborhood ? ` — ${os.store_neighborhood}` : '',
+                                os.store_city ? `, ${os.store_city}` : '',
+                                os.store_state ? `/${os.store_state}` : '',
+                              ].filter(Boolean).join('');
+                              setLojaOutra(storeStr);
+                            }
+                          }}
                           className={cn(
                             "w-full text-left p-3 rounded-xl border-2 transition-all",
                             "border-border hover:border-primary/40 hover:bg-primary/5"
@@ -326,7 +352,7 @@ export default function BuscarPecaMotoModal({ isOpen, onSelect, onCancel, presel
               </div>
 
               <p className="text-[10px] text-emerald-700 pt-1">
-                ✓ O motoby usará estes dados para contato em caso de dúvidas sobre as peças.
+                ✓ Dados do atendimento original (descrição, fotos e loja) foram preenchidos automaticamente acima.
               </p>
             </div>
           )}

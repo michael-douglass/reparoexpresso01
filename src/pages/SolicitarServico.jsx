@@ -1393,6 +1393,17 @@ export default function SolicitarServico() {
                 setPecaOsId(data.os_id);
                 setPecaProviderId(data.provider_id);
                 setPecaOsNumber(data.os_number);
+                // Pré-preenche endereço da loja do atendimento original
+                if (data.store_address) {
+                  set('store_address', data.store_address);
+                  set('store_number', data.store_number || '');
+                  set('store_neighborhood', data.store_neighborhood || '');
+                  set('store_city', data.store_city || '');
+                  set('store_state', data.store_state || '');
+                  set('store_cep', data.store_cep || '');
+                  if (data.store_latitude) set('store_latitude', data.store_latitude);
+                  if (data.store_longitude) set('store_longitude', data.store_longitude);
+                }
                 setDescriptionsPerService(prev => ({
                   ...prev,
                   buscar_peca_moto: {
