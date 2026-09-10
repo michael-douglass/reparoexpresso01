@@ -6,6 +6,7 @@ import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from "sonner";
 import { useMutation } from '@tanstack/react-query';
+import { generateProviderContract, DEFAULT_PROVIDER_TERMS } from '@/lib/providerContractTemplate';
 
 export default function ProviderTermsTab({ providerId }) {
   const [termsContent, setTermsContent] = useState('');
@@ -24,11 +25,9 @@ export default function ProviderTermsTab({ providerId }) {
           if (provider && provider.contract_content) {
             setTermsContent(provider.contract_content);
           } else {
-            // Fallback: termos genéricos do localStorage
-            const stored = localStorage.getItem('provider_terms_content');
-            if (stored) {
-              setTermsContent(stored);
-            }
+            // Gera o contrato personalizado na hora com os dados do prestador
+            const template = localStorage.getItem('provider_terms_content') || DEFAULT_PROVIDER_TERMS;
+            setTermsContent(generateProviderContract(provider, template));
           }
           if (provider && provider.terms_accepted_at) {
             setHasAccepted(true);
