@@ -224,6 +224,15 @@ export default function SolicitarServico() {
    delivery_latitude: null,
    delivery_longitude: null,
    tow_distance_km: null,
+   store_address: '',
+   store_number: '',
+   store_neighborhood: '',
+   store_city: '',
+   store_state: '',
+   store_cep: '',
+   store_latitude: null,
+   store_longitude: null,
+   moto_peca_distance_km: null,
    modality: urlParams.get('modality') || 'imediato',
    urgency: 'agora',
    scheduled_date: urlParams.get('scheduled_date') || '',
@@ -242,7 +251,7 @@ export default function SolicitarServico() {
   const [loadingCep, setLoadingCep] = useState(false);
   const [cepError, setCepError] = useState('');
 
-  const geocodeAddress = async (street, number, neighborhood, city, state, isDelivery = false) => {
+  const geocodeAddress = async (street, number, neighborhood, city, state, isDelivery = false, isStore = false) => {
     const query = [street, number, neighborhood, city, state, 'Brasil'].filter(Boolean).join(', ');
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=br`, {
@@ -252,7 +261,9 @@ export default function SolicitarServico() {
       if (data?.length > 0) {
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
-        if (isDelivery) {
+        if (isStore) {
+          setForm(prev => ({ ...prev, store_latitude: lat, store_longitude: lon }));
+        } else if (isDelivery) {
           setForm(prev => ({ ...prev, delivery_latitude: lat, delivery_longitude: lon }));
         } else {
           setForm(prev => ({ ...prev, latitude: lat, longitude: lon }));
@@ -263,7 +274,7 @@ export default function SolicitarServico() {
     }
   };
 
-  const searchByCep = async (cep, isDelivery = false) => {
+  const searchByCep = async (cep, isDelivery = false, isStore = false) => {
    const cleanCep = cep.replace(/\D/g, '');
    if (cleanCep.length !== 8) return;
 
@@ -279,7 +290,17 @@ export default function SolicitarServico() {
        return;
      }
 
-     if (isDelivery) {
+     if (isStore) {
+       setForm(prev => ({
+         ...prev,
+         store_address: data.logradouro || '',
+         store_city: data.localidade || '',
+         store_state: data.uf || '',
+         store_neighborhood: data.bairro || '',
+         store_cep: cleanCep,
+       }));
+       await geocodeAddress(data.logradouro, '', data.bairro, data.localidade, data.uf, false, true);
+     } else if (isDelivery) {
        setForm(prev => ({
          ...prev,
          delivery_address: data.logradouro || '',
@@ -351,6 +372,7 @@ export default function SolicitarServico() {
   };
 
   const isTow = form.service_type.includes('reboque');
+  const isMotoPeca = form.service_type.includes('buscar_peca_moto');
 
   // Busca precificação de reboque por categoria de veículo
   const { data: towPricingData = [] } = useQuery({
@@ -398,6 +420,28 @@ export default function SolicitarServico() {
   };
 
   const towPrice = calculateTowPrice();
+
+  // Busca precificação de moto peça
+  const { data: motoPecaPricingData } = useQuery({
+    queryKey: ['moto-peca-pricing'],
+    queryFn: () => base44.entities.ServicePricing.filter({ service_type: 'buscar_peca_moto' }),
+    enabled: isMotoPeca,
+  });
+
+  const motoPecaPricing = motoPecaPricingData?.find(p => !p.city);
+
+  const calculateMotoPecaPrice = () => {
+    if (!isMotoPeca || !form.moto_peca_distance_km || !motoPecaPricing) return null;
+    const base = motoPecaPricing.price_min || 0;
+    const perKm = motoPecaPricing.price_max || 0;
+    const kmCobertos = 10; // Taxa de saída cobre os primeiros 10 km
+    const kmExtras = Math.max(0, form.moto_peca_distance_km - kmCobertos);
+    const distanceCharge = kmExtras * perKm;
+    const total = base + distanceCharge;
+    return { base, distanceCharge, total, distance: form.moto_peca_distance_km, perKm, kmExtras };
+  };
+
+  const motoPecaPrice = calculateMotoPecaPrice();
 
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -470,6 +514,20 @@ export default function SolicitarServico() {
       .finally(() => setCalculatingRoute(false));
   }, [form.latitude, form.longitude, form.delivery_latitude, form.delivery_longitude, isTow]);
 
+  // Cálculo de distância para Moto Peça (cliente → loja → cliente = ida e volta)
+  React.useEffect(() => {
+    if (!isMotoPeca || !form.latitude || !form.longitude || !form.store_latitude || !form.store_longitude) return;
+    setCalculatingRoute(true);
+    fetch(`https://router.project-osrm.org/route/v1/driving/${form.longitude},${form.latitude};${form.store_longitude},${form.store_latitude}?overview=false`, { signal: AbortSignal.timeout(6000) })
+      .then(r => r.json())
+      .then(data => {
+        const km = data?.routes?.[0]?.distance != null ? (data.routes[0].distance / 1000) * 2 : calcDistance(form.latitude, form.longitude, form.store_latitude, form.store_longitude) * 2;
+        setForm(prev => ({ ...prev, moto_peca_distance_km: km }));
+      })
+      .catch(() => setForm(prev => ({ ...prev, moto_peca_distance_km: calcDistance(form.latitude, form.longitude, form.store_latitude, form.store_longitude) * 2 })))
+      .finally(() => setCalculatingRoute(false));
+  }, [form.latitude, form.longitude, form.store_latitude, form.store_longitude, isMotoPeca]);
+
   const [registerForm, setRegisterForm] = useState({
     name: currentUser?.full_name || '',
     phone: '',
@@ -524,6 +582,10 @@ export default function SolicitarServico() {
 
       if (isTow && form.latitude && form.delivery_latitude) {
         baseData.tow_distance_km = calcDistance(form.latitude, form.longitude, form.delivery_latitude, form.delivery_longitude) * 2;
+      }
+
+      if (isMotoPeca && form.latitude && form.store_latitude) {
+        baseData.moto_peca_distance_km = form.moto_peca_distance_km || calcDistance(form.latitude, form.longitude, form.store_latitude, form.store_longitude) * 2;
       }
 
       const results = await Promise.all(
@@ -628,6 +690,8 @@ export default function SolicitarServico() {
     let estimatedPrice = null;
     if (towPrice?.total) {
       estimatedPrice = towPrice.total;
+    } else if (motoPecaPrice?.total) {
+      estimatedPrice = motoPecaPrice.total;
     } else if (form.service_type.includes('limpeza_caixa_dagua') && caixaDaguaLitragem && CAIXA_PRECOS[caixaDaguaLitragem]) {
       estimatedPrice = CAIXA_PRECOS[caixaDaguaLitragem];
     } else if (form.service_type.includes('desentupimento') && desentupimentoTipo && DESENT_PRECOS[desentupimentoTipo]) {
@@ -663,8 +727,10 @@ export default function SolicitarServico() {
     }
     if (step === 3) {
       const hasDelivery = !isTow || (form.delivery_address.length > 3 && form.delivery_latitude && form.delivery_longitude);
-      const hasDistance = !isTow || (form.latitude && form.longitude && form.delivery_latitude && form.delivery_longitude); // Reboque precisa ter distância calculável
-      return form.address.length > 3 && hasDelivery && hasDistance;
+      const hasDistance = !isTow || (form.latitude && form.longitude && form.delivery_latitude && form.delivery_longitude);
+      const hasStore = !isMotoPeca || (form.store_address.length > 3 && form.store_latitude && form.store_longitude);
+      const hasMotoPecaDistance = !isMotoPeca || (form.latitude && form.longitude && form.store_latitude && form.store_longitude);
+      return form.address.length > 3 && hasDelivery && hasDistance && hasStore && hasMotoPecaDistance;
     }
     if (step === 4) {
       if (form.modality === 'agendado') return !!form.scheduled_date && !!form.scheduled_time;
@@ -1862,6 +1928,96 @@ export default function SolicitarServico() {
           </div>
           )}
 
+          {/* Step 3c: Endereço da Loja (apenas para Moto Peça) */}
+          {step === 3 && isMotoPeca && (
+          <div className="space-y-5 mt-8 pt-8 border-t border-border">
+          <div>
+            <h3 className="text-xl font-bold text-foreground mb-1">🏪 Endereço da loja de peças</h3>
+            <p className="text-muted-foreground mb-4">Onde o motoboy deve comprar as peças? (obrigatório)</p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>CEP da loja</Label>
+              <div className="relative">
+                <Input
+                  placeholder="00000-000"
+                  value={form.store_cep}
+                  onChange={e => set('store_cep', e.target.value)}
+                  onBlur={() => searchByCep(form.store_cep, false, true)}
+                  disabled={loadingCep}
+                  className="rounded-2xl"
+                />
+                {loadingCep && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />}
+              </div>
+              {cepError && <p className="text-xs text-destructive">{cepError}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>Rua da loja</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Nome da rua da loja..."
+                  value={form.store_address}
+                  onChange={e => set('store_address', e.target.value)}
+                  className="pl-10 rounded-2xl"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input placeholder="Nº" value={form.store_number} onChange={e => set('store_number', e.target.value)} className="rounded-2xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input placeholder="Bairro" value={form.store_neighborhood} onChange={e => set('store_neighborhood', e.target.value)} className="rounded-2xl" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input placeholder="Cidade" value={form.store_city} onChange={e => set('store_city', e.target.value)} className="rounded-2xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Estado</Label>
+                <Input placeholder="UF" value={form.store_state} onChange={e => set('store_state', e.target.value)} className="rounded-2xl" maxLength={2} />
+              </div>
+            </div>
+          </div>
+
+          {form.latitude && form.longitude && form.store_latitude && form.store_longitude ? (
+            <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
+              <p className="text-sm font-semibold text-amber-900 mb-1">🗺️ Distância (cliente → loja → cliente)</p>
+              {calculatingRoute ? <div className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-500" /><span className="text-sm text-amber-600">Calculando rota...</span></div>
+                : <p className="text-2xl font-bold text-amber-600">{form.moto_peca_distance_km?.toFixed(1)} km</p>}
+              <p className="text-xs text-amber-700 mt-1">distância real pela via (OSRM) — ida e volta</p>
+              {motoPecaPrice && (
+                <div className="mt-3 pt-3 border-t border-amber-200">
+                  <p className="text-xs font-semibold text-amber-900 mb-1">ESTIMATIVA DE PREÇO</p>
+                  <p className="text-2xl font-black text-amber-600">R$ {motoPecaPrice.total.toFixed(2)}</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                    <div className="bg-white/50 rounded-lg p-2">
+                      <p className="text-muted-foreground">Taxa saída (cobre 10 km)</p>
+                      <p className="font-bold text-foreground">R$ {motoPecaPrice.base.toFixed(2)}</p>
+                    </div>
+                    <div className="bg-white/50 rounded-lg p-2">
+                      <p className="text-muted-foreground">{motoPecaPrice.kmExtras > 0 ? `Km excedentes (${motoPecaPrice.kmExtras.toFixed(1)} km)` : 'Sem km excedentes'}</p>
+                      <p className="font-bold text-foreground">R$ {motoPecaPrice.distanceCharge.toFixed(2)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
+              <p className="text-sm font-semibold text-orange-900 mb-1">⚠️ Distância não calculada</p>
+              <p className="text-xs text-orange-700">Informe o endereço da loja e o seu endereço para calcular a cobrança</p>
+            </div>
+          )}
+          </div>
+          )}
+
       {/* Step 4: Quando */}
       {step === 4 && (
         <div className="space-y-5">
@@ -2007,6 +2163,19 @@ export default function SolicitarServico() {
             {isTow && towPrice && (
               <p className="text-sm text-blue-600 font-bold">
                 💰 Estimado: R$ {towPrice.total.toFixed(2)} ({towVehicleType})
+              </p>
+            )}
+            {isMotoPeca && motoPecaPrice && (
+              <p className="text-sm text-amber-600 font-bold">
+                💰 Estimado: R$ {motoPecaPrice.total.toFixed(2)} (Moto Peça)
+              </p>
+            )}
+            {isMotoPeca && form.store_address && (
+              <p className="text-sm text-muted-foreground">
+                🏪 Loja: {form.store_address}{form.store_number ? `, ${form.store_number}` : ''}{form.store_neighborhood ? ` - ${form.store_neighborhood}` : ''}{form.store_city ? `, ${form.store_city}` : ''}
+                {form.latitude && form.store_latitude && (
+                  <span className="block mt-1 font-semibold text-amber-600">📏 Total: {form.moto_peca_distance_km?.toFixed(1)} km (ida e volta)</span>
+                )}
               </p>
             )}
             {form.problem_photos.length > 0 && <p className="text-sm text-muted-foreground">📷 {form.problem_photos.length} foto(s) anexada(s)</p>}

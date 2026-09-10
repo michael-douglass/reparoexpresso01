@@ -22,6 +22,7 @@ import ClientConsultaAdmin from '../components/admin/ClientConsultaAdmin';
 import ServiceMetrics from '../components/admin/ServiceMetrics';
 import ClientBlacklist from '../components/admin/ClientBlacklist';
 import TowPricing from '../components/admin/TowPricing';
+import MotoPecaPricing from '../components/admin/MotoPecaPricing';
 import ProviderDocumentReview from '../components/admin/ProviderDocumentReview';
 import ExpiringServicesAlert from '../components/admin/ExpiringServicesAlert';
 import TermsManager from '../components/admin/TermsManager';
@@ -448,6 +449,9 @@ export default function AdminPanel() {
              <ServicePricingByRegion />
              <div className="border-t border-border pt-4 mt-4">
                <TowPricing />
+             </div>
+             <div className="border-t border-border pt-4 mt-4">
+               <MotoPecaPricing />
              </div>
              <div className="border-t border-border pt-4 mt-4">
                <ServicePricingByCategory />

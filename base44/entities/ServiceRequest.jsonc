@@ -167,6 +167,46 @@
       "type": "number",
       "description": "Dist\u00e2ncia em km para reboque (calculada)"
     },
+    "store_address": {
+      "type": "string",
+      "description": "Rua da loja de pe\u00e7as (para moto pe\u00e7a)"
+    },
+    "store_number": {
+      "type": "string",
+      "description": "N\u00famero da loja"
+    },
+    "store_neighborhood": {
+      "type": "string",
+      "description": "Bairro da loja"
+    },
+    "store_city": {
+      "type": "string",
+      "description": "Cidade da loja"
+    },
+    "store_state": {
+      "type": "string",
+      "description": "Estado da loja"
+    },
+    "store_cep": {
+      "type": "string",
+      "description": "CEP da loja"
+    },
+    "store_latitude": {
+      "type": "number",
+      "description": "Latitude da loja de pe\u00e7as"
+    },
+    "store_longitude": {
+      "type": "number",
+      "description": "Longitude da loja de pe\u00e7as"
+    },
+    "motoPecaDistance_km": {
+      "type": "number",
+      "description": "Dist\u00e2ncia total em km do moto pe\u00e7a (cliente\u2192loja + loja\u2192cliente, calculada)"
+    },
+    "motoPecaLegBase_km": {
+      "type": "number",
+      "description": "Dist\u00e2ncia da casa do cliente at\u00e9 a base do prestador (calculada ao aceitar)"
+    },
     "modality": {
       "type": "string",
       "enum": [
