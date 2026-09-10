@@ -11,6 +11,7 @@ import {
   GraduationCap, CheckCircle2, Loader2, Camera
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { generateProviderContract } from "@/lib/providerContractTemplate";
 
 const SPECIALTIES = [
   { label: "Elétrica", icon: "⚡" },
@@ -132,29 +133,42 @@ export default function ProviderRegister() {
   };
 
   const createProvider = useMutation({
-    mutationFn: () => base44.entities.Provider.create({
-      name: form.name,
-      phone: form.phone,
-      email: form.email,
-      birth_date: form.birth_date,
-      cpf: form.cpf,
-      rg: form.rg,
-      photo_url: form.photo_url,
-      photo_body_url: form.photo_body_url,
-      address: form.address,
-      neighborhood: form.neighborhood,
-      city: form.city,
-      state: form.state,
-      zip_code: form.zip_code,
-      bio: form.bio,
-      specialties: form.specialties,
-      experience_years: Number(form.experience_years) || 0,
-      is_online: false,
-      is_approved: false,
-      rating: 5,
-      total_reviews: 0,
-      total_jobs: 0,
-    }),
+    mutationFn: async () => {
+      const created = await base44.entities.Provider.create({
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        birth_date: form.birth_date,
+        cpf: form.cpf,
+        rg: form.rg,
+        photo_url: form.photo_url,
+        photo_body_url: form.photo_body_url,
+        address: form.address,
+        neighborhood: form.neighborhood,
+        city: form.city,
+        state: form.state,
+        zip_code: form.zip_code,
+        bio: form.bio,
+        specialties: form.specialties,
+        experience_years: Number(form.experience_years) || 0,
+        is_online: false,
+        is_approved: false,
+        rating: 5,
+        total_reviews: 0,
+        total_jobs: 0,
+      });
+      // Pré-preenche o contrato com os dados do cadastro
+      const contractContent = generateProviderContract({
+        ...created,
+        name: form.name,
+        cpf: form.cpf,
+        cnpj: form.cnpj,
+      });
+      await base44.entities.Provider.update(created.id, {
+        contract_content: contractContent,
+      });
+      return created;
+    },
     onSuccess: () => setDone(true),
   });
 

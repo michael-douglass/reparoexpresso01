@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { generateProviderContract } from '@/lib/providerContractTemplate';
 
 const STATUS_CONFIG = {
   aprovado:    { label: 'Aprovado',    color: 'bg-green-100 text-green-700',  icon: CheckCircle2, border: 'border-green-300' },
@@ -145,11 +146,23 @@ function ProviderDocumentModal({ provider, onClose, onUpdate }) {
   };
 
   const approveProvider = useMutation({
-    mutationFn: () => base44.entities.Provider.update(provider.id, { is_approved: true }),
+    mutationFn: async () => {
+      // Regenera o contrato com o template atual do admin (localStorage) + dados do prestador
+      const adminTemplate = localStorage.getItem('provider_terms_content') || undefined;
+      const contractContent = generateProviderContract(provider, adminTemplate);
+      // Envia o contrato preenchido para assinatura e aprova o prestador
+      return base44.functions.invoke('sendProviderContractForSignature', {
+        provider_id: provider.id,
+        contract_content: contractContent,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['providers-doc-review'] });
-      toast.success('Prestador aprovado com acesso liberado!');
+      toast.success('Prestador aprovado! Contrato enviado para assinatura.');
       onClose();
+    },
+    onError: (error) => {
+      toast.error('Erro ao enviar contrato: ' + (error.message || 'erro desconhecido'));
     },
   });
 

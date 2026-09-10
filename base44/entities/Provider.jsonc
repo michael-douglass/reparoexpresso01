@@ -242,6 +242,15 @@
       "type": "string",
       "format": "date-time",
       "description": "Data/hora da \u00faltima aceita\u00e7\u00e3o dos termos"
+    },
+    "contract_content": {
+      "type": "string",
+      "description": "Contrato de credenciamento preenchido com os dados do prestador"
+    },
+    "contract_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data/hora em que o contrato foi enviado para assinatura (ap\u00f3s aprova\u00e7\u00e3o do admin)"
     }
   },
   "required": [

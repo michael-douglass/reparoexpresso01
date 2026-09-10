@@ -16,16 +16,20 @@ export default function ProviderTermsTab({ providerId }) {
 
   useEffect(() => {
     const loadData = async () => {
-      // Carrega os termos do localStorage (salvos pelo admin)
-      const stored = localStorage.getItem('provider_terms_content');
-      if (stored) {
-        setTermsContent(stored);
-      }
-
-      // Verifica se o prestador já aceitou consultando o banco
+      // Verifica se o prestador já aceitou e carrega o contrato personalizado
       if (providerId) {
         try {
           const provider = await base44.entities.Provider.get(providerId);
+          // Prioriza o contrato personalizado preenchido com os dados do prestador
+          if (provider && provider.contract_content) {
+            setTermsContent(provider.contract_content);
+          } else {
+            // Fallback: termos genéricos do localStorage
+            const stored = localStorage.getItem('provider_terms_content');
+            if (stored) {
+              setTermsContent(stored);
+            }
+          }
           if (provider && provider.terms_accepted_at) {
             setHasAccepted(true);
             setAcceptedAt(new Date(provider.terms_accepted_at).toLocaleDateString('pt-BR', { 
