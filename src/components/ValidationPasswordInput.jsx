@@ -3,13 +3,17 @@ import { KeyRound } from 'lucide-react';
 
 /**
  * Campo isolado da senha de validação — INPUT NÃO-CONTROLADO.
+ *
  * O valor vive no DOM (ref), não em estado React.
- * Assim, re-renders do ActiveJobCard (GPS a cada 15s, setValidationOk, etc.)
- * NUNCA afetam o campo: o prestador digita sem perder o foco nem o valor.
+ * O parent só é notificado QUANDO O STATUS MUDA (false→true ou true→false),
+ * nunca a cada tecla — assim o ActiveJobCard não re-renderiza durante a digitação
+ * e o prestador nunca perde o foco nem o valor digitado.
  */
 function ValidationPasswordInput({ expectedPassword, onValidationChange }) {
   const inputRef = useRef(null);
   const errorRef = useRef(null);
+  // Guarda o último status notificado ao parent para evitar chamadas repetidas
+  const lastNotifiedRef = useRef(false);
 
   if (!expectedPassword) return null;
 
@@ -20,17 +24,21 @@ function ValidationPasswordInput({ expectedPassword, onValidationChange }) {
     if (raw !== filtered) {
       e.target.value = filtered;
     }
+
     const ok = filtered.length === 6 && filtered === String(expectedPassword);
+
     // Atualiza mensagem de erro via DOM (sem causar re-render)
     if (errorRef.current) {
-      errorRef.current.textContent =
-        filtered.length === 6 && !ok ? 'Senha incorreta. Peça novamente ao cliente.' : '';
-      errorRef.current.style.display =
-        filtered.length === 6 && !ok ? 'block' : 'none';
+      const showError = filtered.length === 6 && !ok;
+      errorRef.current.textContent = showError ? 'Senha incorreta. Peça novamente ao cliente.' : '';
+      errorRef.current.style.display = showError ? 'block' : 'none';
     }
-    // Notifica o parent — causa re-render do ActiveJobCard, mas o input é
-    // não-controlado então mantém valor e foco intactos.
-    onValidationChange(ok);
+
+    // Só notifica o parent quando o status MUDAR — nunca a cada tecla
+    if (ok !== lastNotifiedRef.current) {
+      lastNotifiedRef.current = ok;
+      onValidationChange(ok);
+    }
   };
 
   return (
