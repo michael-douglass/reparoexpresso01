@@ -423,6 +423,10 @@
       "type": "number",
       "description": "Horas estimadas pelo prestador para executar o retorno (informado ao finalizar por 'Necess\u00e1rio Pe\u00e7a')"
     },
+    "retorno_origem_os_id": {
+      "type": "string",
+      "description": "ID da OS original que gerou esta OS de retorno (por pe\u00e7a ou garantia)"
+    },
     "peca_solicitada": {
       "type": "boolean",
       "default": false,

@@ -22,6 +22,36 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true });
     }
 
+    // Se é uma OS de retorno (por peça ou garantia), priorizar o prestador original
+    if (serviceRequest.retorno_origem_os_id) {
+      try {
+        const originalOS = await base44.asServiceRole.entities.ServiceRequest.get(serviceRequest.retorno_origem_os_id);
+        if (originalOS && originalOS.provider_id) {
+          const originalProvider = await base44.asServiceRole.entities.Provider.get(originalOS.provider_id);
+          // Verifica se o prestador original está aprovado, não bloqueado/arquivado e não em execução
+          if (originalProvider && originalProvider.is_approved && !originalProvider.is_blocked && !originalProvider.is_archived) {
+            const allSvcs = await base44.asServiceRole.entities.ServiceRequest.list();
+            const inExecution = allSvcs.some(sr => sr.status === 'em_andamento' && sr.provider_id === originalProvider.id);
+            if (!inExecution) {
+              const updateData: any = {
+                provider_id: originalProvider.id,
+                provider_name: originalProvider.name,
+                provider_phone: originalProvider.phone,
+                status: 'aguardando'
+              };
+              if (originalProvider.latitude) updateData.provider_latitude = originalProvider.latitude;
+              if (originalProvider.longitude) updateData.provider_longitude = originalProvider.longitude;
+              await base44.asServiceRole.entities.ServiceRequest.update(serviceRequest.id, updateData);
+              console.log(`Retorno ${serviceRequest.id} atribuído ao prestador original ${originalProvider.id}`);
+              return Response.json({ success: true, provider_id: originalProvider.id, provider_name: originalProvider.name });
+            }
+          }
+        }
+      } catch (e) {
+        console.log(`Erro ao buscar prestador original do retorno: ${e.message} — usando fluxo normal`);
+      }
+    }
+
     // Buscar prestadores online ou aprovados
     let providers = await base44.asServiceRole.entities.Provider.list();
     

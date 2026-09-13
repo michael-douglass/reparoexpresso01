@@ -103,10 +103,44 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
 
     const label = tipo === 'retorno_peca' ? 'RETORNO POR PEÇA' : 'RETORNO GARANTIA';
 
-    // Caso: mesmo prestador + data/hora selecionada → cria OS diretamente
-    if (agendarComOriginal && request.provider_id && scheduledDate && scheduledTime) {
+    // Caso: retorno por peça → cria OS nova em aguardando (sem provider_id)
+    // O assignServiceToProvider prioriza o prestador original via retorno_origem_os_id
+    // e o chamado chega como um novo chamado normal para o prestador
+    if (tipo === 'retorno_peca' && request.provider_id) {
       try {
-        const newOS = await base44.entities.ServiceRequest.create({
+        await base44.entities.ServiceRequest.create({
+          service_type: request.service_type,
+          description: `${label} - ${descricao}`,
+          client_name: request.client_name,
+          client_phone: request.client_phone,
+          client_id: request.client_id,
+          address: request.address,
+          number: request.number,
+          neighborhood: request.neighborhood,
+          city: request.city,
+          state: request.state,
+          cep: request.cep,
+          latitude: request.latitude,
+          longitude: request.longitude,
+          modality: 'imediato',
+          status: 'aguardando',
+          retorno_origem_os_id: request.id,
+          retorno_estimated_hours: retornoHours,
+        });
+        setLoading(false);
+        setSucesso(true);
+        setNavigateParams(null);
+      } catch (e) {
+        console.error('Erro ao criar OS de retorno:', e.message);
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Caso: retorno por garantia com mesmo prestador + data/hora → cria OS agendada
+    if (tipo === 'retorno_garantia' && agendarComOriginal && request.provider_id && scheduledDate && scheduledTime) {
+      try {
+        await base44.entities.ServiceRequest.create({
           service_type: request.service_type,
           description: `${label} - ${descricao}`,
           client_name: request.client_name,
@@ -127,11 +161,10 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           provider_id: request.provider_id,
           provider_name: request.provider_name,
           provider_phone: request.provider_phone,
-          retorno_estimated_hours: tipo === 'retorno_peca' ? retornoHours : undefined,
         });
         setLoading(false);
         setSucesso(true);
-        setNavigateParams(null); // sinaliza que vai pra home
+        setNavigateParams(null);
       } catch (e) {
         console.error('Erro ao criar OS de retorno:', e.message);
         setLoading(false);
@@ -163,8 +196,8 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
     }
   }, [isWarrantyReturn]);
 
-  // Mostra passo de agendamento depois de preencher tipo + descrição
-  const showAgendamento = tipo && !prazoExpirado && descricao.trim().length >= 5;
+  // Mostra passo de agendamento apenas para retorno por garantia (retorno por peça é imediato)
+  const showAgendamento = tipo === 'retorno_garantia' && !prazoExpirado && descricao.trim().length >= 5;
 
   // Countdown automático na tela de sucesso
   useEffect(() => {
@@ -198,7 +231,9 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           <h3 className="text-xl font-bold text-foreground">Retorno agendado com sucesso!</h3>
           <p className="text-sm text-muted-foreground">
             {isDirectSchedule
-              ? `O retorno foi agendado com ${request?.provider_name || 'o prestador'} para ${scheduledDate} às ${scheduledTime}. O prestador foi notificado.`
+              ? (tipo === 'retorno_peca'
+                ? `Uma nova OS de retorno foi enviada para ${request?.provider_name || 'o prestador'} como um novo chamado. Ele irá aceitar e entrar em contato.`
+                : `O retorno foi agendado com ${request?.provider_name || 'o prestador'} para ${scheduledDate} às ${scheduledTime}. O prestador foi notificado.`)
               : 'Sua solicitação foi registrada. Você será redirecionado para buscar um prestador disponível.'}
           </p>
           <div className="text-4xl font-black text-primary">{countdown}</div>
@@ -474,12 +509,12 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           className="w-full rounded-2xl h-11 font-bold"
           disabled={
             !tipo || !descricao.trim() || loading || prazoExpirado ||
-            (request?.provider_id ? agendarComOriginal === null : false) ||
-            (agendarComOriginal === true && (!scheduledDate || !scheduledTime))
+            (tipo === 'retorno_garantia' && request?.provider_id ? agendarComOriginal === null : false) ||
+            (tipo === 'retorno_garantia' && agendarComOriginal === true && (!scheduledDate || !scheduledTime))
           }
           onClick={handleSubmit}
         >
-          📋 Abrir OS de Retorno
+          {tipo === 'retorno_peca' ? '📋 Abrir OS de Retorno para o Prestador' : '📋 Abrir OS de Retorno'}
         </Button>
 
         {/* Info de prazos */}
