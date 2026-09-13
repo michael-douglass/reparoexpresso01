@@ -9,13 +9,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'serviceRequestId é obrigatório' }, { status: 400 });
     }
 
-    // Dias de garantia: padrão 90, permitido customizar
-    const warrantyDays = Number(days) && Number(days) > 0 ? Math.floor(Number(days)) : 90;
-
     // Busca o serviço
     const service = await base44.entities.ServiceRequest.get(serviceRequestId);
     if (!service) {
       return Response.json({ error: 'Serviço não encontrado' }, { status: 404 });
+    }
+
+    // Dias de garantia: informado > padrão da categoria > 90
+    let warrantyDays = Number(days) && Number(days) > 0 ? Math.floor(Number(days)) : null;
+    if (!warrantyDays) {
+      try {
+        const pricings = await base44.entities.ServicePricing.filter({ service_type: service.service_type });
+        const catPricing = pricings.find(p => !p.city && !p.state);
+        warrantyDays = (catPricing?.warranty_days && Number(catPricing.warranty_days) > 0)
+          ? Math.floor(Number(catPricing.warranty_days))
+          : 90;
+      } catch {
+        warrantyDays = 90;
+      }
     }
 
     // Se já tem garantia definida e não forçou sobrescrita, não altera

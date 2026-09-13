@@ -5,11 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Calendar, Save, Search, Clock } from "lucide-react";
+import { ShieldCheck, Calendar, Save, Search, Clock, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { differenceInDays, format } from "date-fns";
 import { logAdminAction } from '@/lib/adminLog';
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend
+} from 'recharts';
 
 const SERVICE_LABELS = {
   eletrica: "Elétrica", hidraulica: "Hidráulica", pintura: "Pintura",
@@ -18,6 +21,9 @@ const SERVICE_LABELS = {
   limpeza_caixa_dagua: "Limpeza Caixa D'água", desentupimento: "Desentupimento",
   outros: "Outros",
 };
+
+const PRAZO_PECA = 15;
+const PRAZO_GARANTIA = 90;
 
 export default function WarrantyAdmin({ adminUser }) {
   const queryClient = useQueryClient();
@@ -30,16 +36,41 @@ export default function WarrantyAdmin({ adminUser }) {
     queryFn: () => base44.entities.ServiceRequest.filter({ status: 'concluido' }, '-updated_date', 200),
   });
 
+  // Apenas OS dentro do prazo de garantia (≤90 dias da conclusão)
+  const inWarranty = useMemo(() => {
+    const now = new Date();
+    return requests.filter(r => {
+      if (!r.updated_date) return false;
+      const dias = differenceInDays(now, new Date(r.updated_date));
+      return dias <= PRAZO_GARANTIA;
+    });
+  }, [requests]);
+
+  // Dados para o gráfico: garantia de peça (≤15d) vs garantia (16-90d)
+  const chartData = useMemo(() => {
+    let peca = 0;
+    let garantia = 0;
+    inWarranty.forEach(r => {
+      const dias = differenceInDays(new Date(), new Date(r.updated_date));
+      if (dias <= PRAZO_PECA) peca++;
+      else garantia++;
+    });
+    return [
+      { name: 'Garantia de Peça', value: peca, color: '#3b82f6' },
+      { name: 'Garantia', value: garantia, color: '#f97316' },
+    ];
+  }, [inWarranty]);
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return requests;
+    if (!search.trim()) return inWarranty;
     const q = search.toLowerCase();
-    return requests.filter(r =>
+    return inWarranty.filter(r =>
       (r.client_name || '').toLowerCase().includes(q) ||
       (r.provider_name || '').toLowerCase().includes(q) ||
       (r.service_type || '').toLowerCase().includes(q) ||
       (r.service_number || '').toLowerCase().includes(q)
     );
-  }, [requests, search]);
+  }, [inWarranty, search]);
 
   const setWarranty = useMutation({
     mutationFn: async ({ serviceId, days }) => {
@@ -86,10 +117,61 @@ export default function WarrantyAdmin({ adminUser }) {
       <div className="flex items-center gap-2 mb-2">
         <ShieldCheck className="w-5 h-5 text-primary" />
         <div>
-          <h2 className="text-lg font-bold text-foreground">Garantia por Serviço</h2>
-          <p className="text-xs text-muted-foreground">Defina quantos dias de garantia cada serviço concluído terá</p>
+          <h2 className="text-lg font-bold text-foreground">Garantias Ativas</h2>
+          <p className="text-xs text-muted-foreground">Serviços concluídos dentro do prazo de garantia (até 90 dias)</p>
         </div>
       </div>
+
+      {/* Gráfico */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-full sm:w-1/2 h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={70}
+                    label={(entry) => entry.value}
+                  >
+                    {chartData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-2 w-full">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50 border border-blue-200">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-800">Garantia de Peça</span>
+                </div>
+                <span className="text-lg font-bold text-blue-700">{chartData[0].value}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground pl-2">Serviços concluídos há até 15 dias (direito a retorno por peça)</p>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-orange-50 border border-orange-200">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-orange-600" />
+                  <span className="text-sm font-semibold text-orange-800">Garantia</span>
+                </div>
+                <span className="text-lg font-bold text-orange-700">{chartData[1].value}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground pl-2">Serviços concluídos entre 16 e 90 dias (apenas retorno em garantia)</p>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-muted mt-2">
+                <span className="text-sm font-semibold text-foreground">Total em garantia</span>
+                <span className="text-lg font-bold text-foreground">{inWarranty.length}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Busca */}
       <div className="relative">
@@ -105,7 +187,9 @@ export default function WarrantyAdmin({ adminUser }) {
       {isLoading ? (
         <p className="text-center text-muted-foreground py-10">Carregando serviços...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-muted-foreground py-10">Nenhum serviço concluído encontrado</p>
+        <p className="text-center text-muted-foreground py-10">
+          {inWarranty.length === 0 ? 'Nenhum serviço em garantia no momento' : 'Nenhum resultado para a busca'}
+        </p>
       ) : (
         <div className="space-y-3">
           {filtered.map(req => {
@@ -115,6 +199,7 @@ export default function WarrantyAdmin({ adminUser }) {
             const diasRestantes = warrantyEnd ? differenceInDays(warrantyEnd, new Date()) : null;
             const currentDays = getDays(req.id);
             const isSaving = savingId === req.id;
+            const isPeca = dias <= PRAZO_PECA;
 
             return (
               <Card key={req.id}>
@@ -136,10 +221,15 @@ export default function WarrantyAdmin({ adminUser }) {
                             expired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
                           )}>
                             <ShieldCheck className="w-3 h-3 mr-1" />
-                            {expired ? 'Garantia expirada' : `Garantia ativa`}
+                            {expired ? 'Garantia expirada' : 'Garantia ativa'}
                           </Badge>
                         ) : (
                           <Badge className="bg-muted text-muted-foreground text-xs border-0">Sem garantia</Badge>
+                        )}
+                        {isPeca && !expired && (
+                          <Badge className="bg-blue-100 text-blue-800 text-xs border-0">
+                            <Package className="w-3 h-3 mr-1" />Peça
+                          </Badge>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
@@ -174,7 +264,7 @@ export default function WarrantyAdmin({ adminUser }) {
                       />
                     </div>
                     <div className="flex gap-1">
-                      {[30, 60, 90, 180].map(d => (
+                      {[15, 30, 60, 90, 180].map(d => (
                         <button
                           key={d}
                           onClick={() => setDaysPerService(prev => ({ ...prev, [req.id]: d }))}

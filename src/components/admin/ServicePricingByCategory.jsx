@@ -62,6 +62,7 @@ export default function ServicePricingByCategory() {
     const { id, ...data } = editForm;
     data.price_min = Number(data.price_min) || null;
     data.price_max = Number(data.price_max) || null;
+    data.warranty_days = data.warranty_days ? Number(data.warranty_days) : null;
     updateMutation.mutate({ id, ...data });
   };
 
@@ -70,6 +71,7 @@ export default function ServicePricingByCategory() {
       ...newPricing,
       price_min: Number(newPricing.price_min) || null,
       price_max: Number(newPricing.price_max) || null,
+      warranty_days: newPricing.warranty_days ? Number(newPricing.warranty_days) : null,
     };
     createMutation.mutate(data);
   };
@@ -88,7 +90,7 @@ export default function ServicePricingByCategory() {
       {/* Novo */}
       {newPricing === null ? (
         <Button
-          onClick={() => setNewPricing({ service_type: '', price_min: '', price_max: '', note: '' })}
+          onClick={() => setNewPricing({ service_type: '', price_min: '', price_max: '', note: '', warranty_days: 90 })}
           className="w-full"
         >
           <Plus className="w-4 h-4 mr-2" /> Adicionar Nova Categoria
@@ -142,6 +144,18 @@ export default function ServicePricingByCategory() {
                 onChange={(e) => setNewPricing({ ...newPricing, note: e.target.value })}
                 className="text-sm h-8"
               />
+            </div>
+            <div>
+              <Label className="text-xs">Dias de Garantia</Label>
+              <Input
+                type="number"
+                min={1}
+                placeholder="90"
+                value={newPricing.warranty_days ?? ''}
+                onChange={(e) => setNewPricing({ ...newPricing, warranty_days: e.target.value ? Number(e.target.value) : null })}
+                className="text-sm h-8"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
             </div>
             <div className="flex gap-2">
               <Button
@@ -202,6 +216,17 @@ export default function ServicePricingByCategory() {
                       className="text-sm h-8"
                     />
                   </div>
+                  <div>
+                    <Label className="text-xs">Dias de Garantia</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={editForm.warranty_days ?? ''}
+                      onChange={(e) => setEditForm({ ...editForm, warranty_days: e.target.value ? Number(e.target.value) : null })}
+                      className="text-sm h-8"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       onClick={handleSave}
@@ -229,6 +254,11 @@ export default function ServicePricingByCategory() {
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <span>💰 R$ {pricing.price_min?.toFixed(2) || '—'} – R$ {pricing.price_max?.toFixed(2) || '—'}</span>
                       {pricing.note && <span className="text-blue-600">({pricing.note})</span>}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-xs">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
+                        🛡️ {pricing.warranty_days || 90} dias de garantia
+                      </span>
                     </div>
                     {pricing.city && <p className="text-xs text-muted-foreground mt-1">📍 {pricing.city}, {pricing.state}</p>}
                   </div>
