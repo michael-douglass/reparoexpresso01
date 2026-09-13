@@ -27,8 +27,7 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
     base44.entities.ServicePricing.filter({ service_type: job.service_type })
       .then(pricingList => {
         // Prioriza a regra padrão (sem cidade definida)
-        const list = Array.isArray(pricingList) ? pricingList : [];
-        const defaultRule = list.find(p => !p.city) || list[0];
+        const defaultRule = pricingList.find(p => !p.city) || pricingList[0];
         if (defaultRule && defaultRule.price_min > 0) {
           setHourlyRate(defaultRule.price_min);
         } else {
