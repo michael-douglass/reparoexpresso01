@@ -245,7 +245,9 @@ export default function SolicitarServico() {
    client_phone: clientProfile?.phone || '',
    referral_code: urlParams.get('ref') || '',
    coupon_code: '',
-  });
+   retorno_origem_os_id: urlParams.get('retorno_de') || null,
+   retorno_estimated_hours: urlParams.get('retorno_estimated_hours') ? Number(urlParams.get('retorno_estimated_hours')) : null,
+   });
 
   const [couponCode, setCouponCode] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);

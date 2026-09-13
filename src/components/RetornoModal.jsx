@@ -45,7 +45,6 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
   const [sucesso, setSucesso] = useState(false);
   const [navigateParams, setNavigateParams] = useState(null);
   const [countdown, setCountdown] = useState(5);
-  const [retornoHours, setRetornoHours] = useState(request?.retorno_estimated_hours || 1);
 
   // Fetch da foto do prestador
   const { data: provider } = useQuery({
@@ -129,7 +128,7 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           provider_name: request.provider_name,
           provider_phone: request.provider_phone,
           retorno_origem_os_id: request.id,
-          retorno_estimated_hours: retornoHours,
+          retorno_estimated_hours: request.retorno_estimated_hours,
         });
         setLoading(false);
         setSucesso(true);
@@ -182,6 +181,9 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
       retorno_de: request.id,
       descricao: `${label} - ${descricao}`,
     });
+    if (request?.retorno_estimated_hours) {
+      params.set('retorno_estimated_hours', request.retorno_estimated_hours);
+    }
     if (scheduledDate && scheduledTime) {
       params.set('modality', 'agendado');
       params.set('scheduled_date', scheduledDate);
@@ -380,57 +382,27 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           </div>
         )}
 
-        {/* Horas estimadas para o retorno */}
-        {tipo === 'retorno_peca' && !prazoExpirado && (
+        {/* Horas estimadas para o retorno (somente leitura — informada pelo prestador) */}
+        {tipo === 'retorno_peca' && !prazoExpirado && request?.retorno_estimated_hours && (
           <div className="space-y-2 border-t border-border pt-3">
             <p className="text-sm font-semibold text-foreground flex items-center gap-1">
               <Timer className="w-4 h-4 text-blue-600" />
-              Quantas horas serão necessárias para o retorno?
+              Tempo estimado para o retorno
             </p>
-            {request?.retorno_estimated_hours && (
-              <p className="text-xs text-muted-foreground">
-                Estimativa do prestador: <strong>{request.retorno_estimated_hours}h</strong>. Você pode ajustar se necessário.
-              </p>
-            )}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setRetornoHours(Math.max(0.5, parseFloat((retornoHours || 1) - 0.5)))}
-                className="rounded-xl border border-input h-10 w-10 flex-shrink-0 flex items-center justify-center hover:bg-accent font-bold text-lg"
-              >
-                −
-              </button>
-              <div className="flex-1 rounded-xl border border-input bg-transparent h-10 flex items-center justify-center text-lg font-bold">
-                {retornoHours}h
-              </div>
-              <button
-                type="button"
-                onClick={() => setRetornoHours(parseFloat((retornoHours || 0) + 0.5))}
-                className="rounded-xl border border-input h-10 w-10 flex-shrink-0 flex items-center justify-center hover:bg-accent font-bold text-lg"
-              >
-                +
-              </button>
-            </div>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4].map(h => (
-                <button
-                  key={h}
-                  onClick={() => setRetornoHours(h)}
-                  className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-                    retornoHours === h
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-accent'
-                  }`}
-                >
-                  {h}h
-                </button>
-              ))}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <span className="text-sm font-bold text-blue-800">
+                {request.retorno_estimated_hours}h
+              </span>
+              <span className="text-xs text-blue-700">
+                · estimativa informada pelo prestador ao finalizar
+              </span>
             </div>
           </div>
         )}
 
-        {/* Agenda do prestador original — retorno por peça */}
-        {tipo === 'retorno_peca' && !prazoExpirado && request?.provider_id && descricao.trim().length >= 5 && (
+        {/* Agenda do prestador original — retorno por peça (somente se houver horários) */}
+        {tipo === 'retorno_peca' && !prazoExpirado && request?.provider_id && hasAvailableSlots && descricao.trim().length >= 5 && (
           <div className="space-y-2 border-t border-border pt-3">
             <p className="text-sm font-semibold text-foreground flex items-center gap-1">
               <Clock className="w-4 h-4 text-blue-600" />
@@ -446,6 +418,21 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
               onTimeChange={setScheduledTime}
               providerId={request?.provider_id}
             />
+          </div>
+        )}
+
+        {/* Sem horários disponíveis na agenda do prestador original — retorno por peça */}
+        {tipo === 'retorno_peca' && !prazoExpirado && request?.provider_id && !hasAvailableSlots && descricao.trim().length >= 5 && (
+          <div className="space-y-2 border-t border-border pt-3">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-amber-800">Prestador original sem horários disponíveis</p>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  {request?.provider_name || 'O prestador'} não tem agenda livre nos próximos 30 dias. Ao confirmar, o sistema buscará automaticamente um novo prestador disponível na região para realizar o retorno.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -533,11 +520,13 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
             !tipo || !descricao.trim() || loading || prazoExpirado ||
             (tipo === 'retorno_garantia' && request?.provider_id ? agendarComOriginal === null : false) ||
             (tipo === 'retorno_garantia' && agendarComOriginal === true && (!scheduledDate || !scheduledTime)) ||
-            (tipo === 'retorno_peca' && request?.provider_id && (!scheduledDate || !scheduledTime))
+            (tipo === 'retorno_peca' && request?.provider_id && hasAvailableSlots && (!scheduledDate || !scheduledTime))
           }
           onClick={handleSubmit}
         >
-          {tipo === 'retorno_peca' ? '📋 Agendar Retorno com Prestador' : '📋 Abrir OS de Retorno'}
+          {tipo === 'retorno_peca'
+            ? (hasAvailableSlots ? '📋 Agendar com prestador original' : '🔍 Buscar novo prestador')
+            : '📋 Abrir OS de Retorno'}
         </Button>
 
         {/* Info de prazos */}
