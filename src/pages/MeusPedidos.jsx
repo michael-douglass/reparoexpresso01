@@ -4,9 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, MapPin, Calendar, DollarSign, Star, Clock, CheckCircle2, AlertCircle, Loader2, Plus, Package } from "lucide-react";
+import { ChevronRight, MapPin, Calendar, DollarSign, Star, Clock, CheckCircle2, AlertCircle, Loader2, Plus, Package, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
+import RetornoModal from '@/components/RetornoModal';
 
 const STATUS_CONFIG = {
   aguardando: { label: "Aguardando", color: "bg-yellow-100 text-yellow-800", icon: Clock },
@@ -49,6 +50,7 @@ export default function MeusPedidos() {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [activeTab, setActiveTab] = React.useState('new');
+  const [retornoRequest, setRetornoRequest] = React.useState(null);
 
   React.useEffect(() => {
     base44.auth.me().then(u => setUser(u)).catch(() => navigate('/'));
@@ -271,6 +273,16 @@ export default function MeusPedidos() {
                           </div>
                         )}
                       </button>
+
+                      {req.status === 'concluido' && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setRetornoRequest(req); }}
+                          className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg px-3 py-2 text-xs font-semibold transition-colors"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          Solicitar Retorno
+                        </button>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -282,6 +294,13 @@ export default function MeusPedidos() {
             </div>
           )}
         </div>
+      )}
+
+      {retornoRequest && (
+        <RetornoModal
+          request={retornoRequest}
+          onClose={() => setRetornoRequest(null)}
+        />
       )}
     </div>
   );
