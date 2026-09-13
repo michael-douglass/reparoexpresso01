@@ -248,7 +248,7 @@
         "cancelado"
       ],
       "default": "aguardando",
-      "description": "Status da OS. 'agendado' = servi\u00e7o futuro confirmado com prestador. 'em_espera' = pausado aguardando cliente buscar pe\u00e7as"
+      "description": "Status da OS. 'agendado' = servi\u00e7o futuro confirmado com prestador. 'em_espera' = pausado manualmente pelo prestador"
     },
     "provider_id": {
       "type": "string"
@@ -417,7 +417,11 @@
     "parts_return_deadline": {
       "type": "string",
       "format": "date-time",
-      "description": "Prazo limite para retorno por compra de pe\u00e7a (15 dias corridos a partir do status 'em_espera')"
+      "description": "Prazo limite para retorno por compra de pe\u00e7a (15 dias corridos a partir da conclus\u00e3o com 'Necess\u00e1rio Pe\u00e7a')"
+    },
+    "retorno_estimated_hours": {
+      "type": "number",
+      "description": "Horas estimadas pelo prestador para executar o retorno (informado ao finalizar por 'Necess\u00e1rio Pe\u00e7a')"
     },
     "peca_solicitada": {
       "type": "boolean",

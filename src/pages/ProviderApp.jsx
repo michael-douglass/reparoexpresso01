@@ -698,16 +698,14 @@ export default function ProviderApp() {
             <p className="text-xs font-bold text-yellow-800">Serviço em espera</p>
             <p className="text-xs text-yellow-700 truncate">{waitingJob.client_name} · {waitingJob.address}</p>
           </div>
-          {!waitingJob.parts_return_deadline && (
-            <Button
-              size="sm"
-              className="rounded-xl bg-primary text-primary-foreground font-bold flex-shrink-0"
-              disabled={updateJobStatus.isPending}
-              onClick={() => updateJobStatus.mutate({ id: waitingJob.id, status: 'em_andamento' })}
-            >
-              <PlayCircle className="w-4 h-4 mr-1" /> Retomar
-            </Button>
-          )}
+          <Button
+            size="sm"
+            className="rounded-xl bg-primary text-primary-foreground font-bold flex-shrink-0"
+            disabled={updateJobStatus.isPending}
+            onClick={() => updateJobStatus.mutate({ id: waitingJob.id, status: 'em_andamento' })}
+          >
+            <PlayCircle className="w-4 h-4 mr-1" /> Retomar
+          </Button>
         </div>
       )}
 

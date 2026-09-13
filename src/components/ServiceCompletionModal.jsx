@@ -8,16 +8,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, Package, Calendar, AlertCircle, Zap } from "lucide-react";
+import { CheckCircle2, Package, Calendar, Zap, Clock } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 export default function ServiceCompletionModal({ open, onClose, onComplete, serviceType }) {
-  const [showPartDeadlineAlert, setShowPartDeadlineAlert] = useState(false);
+  const [showPartForm, setShowPartForm] = useState(false);
   const [showTechVisitReason, setShowTechVisitReason] = useState(false);
   const [showPressurizadorFeasibility, setShowPressurizadorFeasibility] = useState(false);
   const [techVisitReason, setTechVisitReason] = useState('');
   const [pressurizadorFeasible, setPressurizadorFeasible] = useState(null);
   const [pressurizadorReason, setPressurizadorReason] = useState('');
   const [selectedParts, setSelectedParts] = useState({});
+  const [retornoHours, setRetornoHours] = useState(1);
 
   const PRESSURIZADOR_PARTS = [
     { id: 'pressostato', label: 'Pressostato', price: 150 },
@@ -29,12 +31,12 @@ export default function ServiceCompletionModal({ open, onClose, onComplete, serv
   ];
 
   const handlePartCompletion = () => {
-    setShowPartDeadlineAlert(true);
+    setShowPartForm(true);
   };
 
-  const handleConfirmPartDeadline = () => {
-    onComplete('em_espera');
-    setShowPartDeadlineAlert(false);
+  const handleConfirmPartForm = () => {
+    onComplete('concluido', { needsPart: true, retornoEstimatedHours: retornoHours });
+    setShowPartForm(false);
     onClose();
   };
 
@@ -75,21 +77,21 @@ export default function ServiceCompletionModal({ open, onClose, onComplete, serv
     onClose();
   };
 
-  // Alerta de deadline de 15 dias para compra de peça
-  if (showPartDeadlineAlert) {
+  // Formulário de horas estimadas para retorno por peça
+  if (showPartForm) {
     return (
       <Dialog open={open} onOpenChange={() => {
-        setShowPartDeadlineAlert(false);
+        setShowPartForm(false);
         onClose();
       }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
-              Prazo de 15 dias
+              <Package className="w-5 h-5 text-blue-600" />
+              Finalizar — Necessário Peça
             </DialogTitle>
             <DialogDescription>
-              Informação importante sobre o retorno
+              O atendimento será finalizado e o cliente terá 15 dias para solicitar o retorno
             </DialogDescription>
           </DialogHeader>
 
@@ -97,24 +99,63 @@ export default function ServiceCompletionModal({ open, onClose, onComplete, serv
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
               <p className="text-sm text-blue-900 font-semibold mb-2">⏰ Prazo para retorno:</p>
               <p className="text-xs text-blue-800 leading-relaxed">
-                O cliente tem até <strong>15 dias</strong> para adquirir a peça e solicitar o retorno do prestador. Após este período, o atendimento será finalizado automaticamente.
+                O cliente tem até <strong>15 dias</strong> para adquirir a peça e solicitar o retorno. Após este período, o atendimento será finalizado automaticamente.
               </p>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-              <p className="text-sm text-amber-900 font-semibold mb-2">📋 O que fazer:</p>
-              <ul className="text-xs text-amber-800 space-y-1">
-                <li>• Cliente compra a peça/material</li>
-                <li>• Cliente solicita retorno</li>
-                <li>• Você retorna para instalar</li>
-              </ul>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold flex items-center gap-1">
+                <Clock className="w-4 h-4 text-blue-600" />
+                Quantas horas serão necessárias para o retorno?
+              </Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-xl h-10 w-10 flex-shrink-0"
+                  onClick={() => setRetornoHours(Math.max(0.5, parseFloat((retornoHours || 1) - 0.5)))}
+                >
+                  −
+                </Button>
+                <div className="flex-1 rounded-xl border border-input bg-transparent h-10 flex items-center justify-center text-lg font-bold">
+                  {retornoHours}h
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-xl h-10 w-10 flex-shrink-0"
+                  onClick={() => setRetornoHours(parseFloat((retornoHours || 0) + 0.5))}
+                >
+                  +
+                </Button>
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4].map(h => (
+                  <button
+                    key={h}
+                    onClick={() => setRetornoHours(h)}
+                    className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                      retornoHours === h
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-accent'
+                    }`}
+                  >
+                    {h}h
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Esta estimativa será informada ao cliente quando ele for solicitar o retorno.
+              </p>
             </div>
 
             <Button
-              onClick={handleConfirmPartDeadline}
+              onClick={handleConfirmPartForm}
               className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold"
             >
-              Entendi, finalizar com prazo
+              Finalizar atendimento
             </Button>
           </div>
         </DialogContent>

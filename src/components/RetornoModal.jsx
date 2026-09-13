@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { X, RotateCcw, ShieldCheck, ChevronRight, AlertTriangle, Clock, User, Users } from "lucide-react";
+import { X, RotateCcw, ShieldCheck, ChevronRight, AlertTriangle, Clock, User, Users, Timer } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
@@ -45,6 +45,7 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
   const [sucesso, setSucesso] = useState(false);
   const [navigateParams, setNavigateParams] = useState(null);
   const [countdown, setCountdown] = useState(5);
+  const [retornoHours, setRetornoHours] = useState(request?.retorno_estimated_hours || 1);
 
   // Fetch da foto do prestador
   const { data: provider } = useQuery({
@@ -126,6 +127,7 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           provider_id: request.provider_id,
           provider_name: request.provider_name,
           provider_phone: request.provider_phone,
+          retorno_estimated_hours: tipo === 'retorno_peca' ? retornoHours : undefined,
         });
         setLoading(false);
         setSucesso(true);
@@ -338,6 +340,55 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
               value={descricao}
               onChange={e => setDescricao(e.target.value)}
             />
+          </div>
+        )}
+
+        {/* Horas estimadas para o retorno */}
+        {tipo === 'retorno_peca' && !prazoExpirado && (
+          <div className="space-y-2 border-t border-border pt-3">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-1">
+              <Timer className="w-4 h-4 text-blue-600" />
+              Quantas horas serão necessárias para o retorno?
+            </p>
+            {request?.retorno_estimated_hours && (
+              <p className="text-xs text-muted-foreground">
+                Estimativa do prestador: <strong>{request.retorno_estimated_hours}h</strong>. Você pode ajustar se necessário.
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setRetornoHours(Math.max(0.5, parseFloat((retornoHours || 1) - 0.5)))}
+                className="rounded-xl border border-input h-10 w-10 flex-shrink-0 flex items-center justify-center hover:bg-accent font-bold text-lg"
+              >
+                −
+              </button>
+              <div className="flex-1 rounded-xl border border-input bg-transparent h-10 flex items-center justify-center text-lg font-bold">
+                {retornoHours}h
+              </div>
+              <button
+                type="button"
+                onClick={() => setRetornoHours(parseFloat((retornoHours || 0) + 0.5))}
+                className="rounded-xl border border-input h-10 w-10 flex-shrink-0 flex items-center justify-center hover:bg-accent font-bold text-lg"
+              >
+                +
+              </button>
+            </div>
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4].map(h => (
+                <button
+                  key={h}
+                  onClick={() => setRetornoHours(h)}
+                  className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                    retornoHours === h
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-accent'
+                  }`}
+                >
+                  {h}h
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

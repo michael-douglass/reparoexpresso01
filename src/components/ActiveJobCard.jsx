@@ -285,12 +285,19 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
 
   const handleCompleteService = (completionType, data = {}) => {
     if (completionType === 'concluido') {
-      onUpdateStatus({ id: liveJob.id, status: 'concluido' });
-    } else if (completionType === 'em_espera') {
-      // "Necessário Peça" — marca o prazo de 15 dias; só o cliente pode solicitar retorno
-      const deadline = new Date();
-      deadline.setDate(deadline.getDate() + 15);
-      onUpdateStatus({ id: liveJob.id, status: 'em_espera', parts_return_deadline: deadline.toISOString() });
+      // "Necessário Peça" finaliza como 'concluido' com prazo de 15 dias + horas estimadas
+      if (data.needsPart) {
+        const deadline = new Date();
+        deadline.setDate(deadline.getDate() + 15);
+        onUpdateStatus({
+          id: liveJob.id,
+          status: 'concluido',
+          parts_return_deadline: deadline.toISOString(),
+          retorno_estimated_hours: data.retornoEstimatedHours || 1,
+        });
+      } else {
+        onUpdateStatus({ id: liveJob.id, status: 'concluido' });
+      }
     } else if (completionType === 'visita_tecnica') {
       // Status específico para visita técnica pendente com motivo
       onUpdateStatus({ id: liveJob.id, status: 'em_andamento', tech_visit_reason: data.reason });
@@ -484,30 +491,23 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
       );
     }
 
-    // Serviço em espera — aguardando cliente buscar peça
+    // Serviço em espera — pause manual do prestador
     if (liveJob.status === WAITING_STATUS) {
-      const isPartsDeadline = !!liveJob.parts_return_deadline;
       return (
         <div className="space-y-3">
           <div className="bg-yellow-50 border border-yellow-300 rounded-2xl p-4 text-center space-y-1">
             <p className="text-sm font-bold text-yellow-800 flex items-center justify-center gap-2">
               <PauseCircle className="w-4 h-4" /> Serviço em espera
             </p>
-            <p className="text-xs text-yellow-700">
-              {isPartsDeadline
-                ? <>Aguardando o cliente adquirir as peças e solicitar o retorno.<br /><strong>Apenas o cliente pode solicitar o retorno.</strong></>
-                : <>Aguardando o cliente adquirir as peças necessárias.<br />Você pode atender outro chamado e retornar depois.</>}
-            </p>
+            <p className="text-xs text-yellow-700">Aguardando o cliente adquirir as peças necessárias.<br />Você pode atender outro chamado e retornar depois.</p>
           </div>
-          {!isPartsDeadline && (
-            <Button
-              className="w-full rounded-2xl bg-primary text-primary-foreground font-bold h-12"
-              disabled={isPending}
-              onClick={() => onUpdateStatus({ id: liveJob.id, status: 'em_andamento' })}
-            >
-              <PlayCircle className="w-4 h-4 mr-2" /> Retomar Execução
-            </Button>
-          )}
+          <Button
+            className="w-full rounded-2xl bg-primary text-primary-foreground font-bold h-12"
+            disabled={isPending}
+            onClick={() => onUpdateStatus({ id: liveJob.id, status: 'em_andamento' })}
+          >
+            <PlayCircle className="w-4 h-4 mr-2" /> Retomar Execução
+          </Button>
         </div>
       );
     }
