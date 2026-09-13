@@ -105,7 +105,7 @@ export default function AcompanharServico() {
       if (event.type === 'update') {
         setAllRequests(prev => prev.map(r => r.id === event.id ? event.data : r));
       } else if (event.type === 'create' && event.data?.created_by === user?.email) {
-        setAllRequests(prev => [event.data, ...prev]);
+        setAllRequests(prev => prev.some(r => r.id === event.id) ? prev : [event.data, ...prev]);
       }
     });
     return () => { cancelled = true; unsub(); };
@@ -221,12 +221,15 @@ export default function AcompanharServico() {
   }
 
   // OS do mesmo lote: criadas com menos de 5 minutos de diferença pela mesma pessoa, exceto canceladas
-  const batchRequests = allRequests.filter(r => {
-    if (!request?.created_date) return false;
-    const diffMs = Math.abs(new Date(r.created_date) - new Date(request.created_date));
-    const diffMin = diffMs / 60000;
-    return diffMin <= 5 && r.status !== 'cancelado';
-  });
+  // Deduplica por id para evitar que a mesma OS apareça duas vezes (race entre carga inicial e subscription)
+  const batchRequests = allRequests
+    .filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i)
+    .filter(r => {
+      if (!request?.created_date) return false;
+      const diffMs = Math.abs(new Date(r.created_date) - new Date(request.created_date));
+      const diffMin = diffMs / 60000;
+      return diffMin <= 5 && r.status !== 'cancelado';
+    });
   const otherBatchRequests = batchRequests.filter(r => r.id !== id);
 
   const currentStepIndex = STATUS_STEPS.findIndex(s => s.key === request.status);
