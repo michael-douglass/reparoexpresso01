@@ -37,6 +37,7 @@ import ProviderPerformanceDashboard from '../components/admin/ProviderPerformanc
 import CouponsAdmin from '../components/admin/CouponsAdmin';
 import SurchargeRulesAdmin from '../components/admin/SurchargeRulesAdmin';
 import CashbackConfigAdmin from '../components/admin/CashbackConfigAdmin';
+import WarrantyAdmin from '../components/admin/WarrantyAdmin';
 import { logAdminAction } from '@/lib/adminLog';
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -270,6 +271,9 @@ export default function AdminPanel() {
           </TabsTrigger>
           <TabsTrigger value="photos" className="text-xs px-2 py-1">
             📷 Fotos {pendingPhotoProviders.length > 0 && `(${pendingPhotoProviders.length})`}
+          </TabsTrigger>
+          <TabsTrigger value="garantias" className="text-xs px-2 py-1">
+            🛡️ Garantias
           </TabsTrigger>
           <TabsTrigger value="reserve-fund" className="text-xs px-2 py-1">
             🔐 Fundos
@@ -537,6 +541,10 @@ export default function AdminPanel() {
 
         <TabsContent value="sobretaxas">
           <SurchargeRulesAdmin />
+        </TabsContent>
+
+        <TabsContent value="garantias">
+          <WarrantyAdmin adminUser={adminUser} />
         </TabsContent>
 
         <TabsContent value="logs">
