@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { KeyRound } from 'lucide-react';
 
 /**
@@ -6,7 +6,7 @@ import { KeyRound } from 'lucide-react';
  * O estado do input fica neste componente, isolado dos re-renders do ActiveJobCard
  * (que acontecem a cada atualização de GPS), garantindo que o prestador consiga digitar.
  */
-export default function ValidationPasswordInput({ expectedPassword, onValidationChange }) {
+function ValidationPasswordInput({ expectedPassword, onValidationChange }) {
   const [value, setValue] = useState('');
 
   const notify = useCallback(onValidationChange, [onValidationChange]);
@@ -41,3 +41,5 @@ export default function ValidationPasswordInput({ expectedPassword, onValidation
     </div>
   );
 }
+
+export default memo(ValidationPasswordInput);

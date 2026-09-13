@@ -5,11 +5,15 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { event, data } = await req.json();
 
-    // Dados da solicitação de serviço criada
-    const serviceRequest = data;
-    
-    if (!serviceRequest || event.type !== 'create') {
+    if (event?.type !== 'create') {
       return Response.json({ error: 'Invalid event' }, { status: 400 });
+    }
+
+    // Lê o estado ATUAL do banco (não do payload do evento) para evitar race condition
+    // onde múltiplas execuções da automação atribuem prestadores diferentes à mesma OS
+    const serviceRequest = await base44.asServiceRole.entities.ServiceRequest.get(event.entity_id);
+    if (!serviceRequest) {
+      return Response.json({ error: 'Solicitação não encontrada' }, { status: 404 });
     }
 
     // Se a OS já tem prestador atribuído ou status diferente de aguardando, não processar

@@ -670,10 +670,11 @@ export default function SolicitarServico() {
       return results[0];
     },
     onSuccess: (r) => navigate(`/acompanhar/${r.id}`),
+    onError: () => { createRequestRef.current = false; },
   });
 
   const handleFinalConfirm = (formData) => {
-    if (createRequestRef.current) return;
+    if (createRequestRef.current || createRequest.isPending) return;
     createRequestRef.current = true;
     setShowProviderSearch(false);
     const { _secondProvider, ...cleanFormData } = formData;
