@@ -12,6 +12,7 @@ import ServiceChat from './ServiceChat';
 import ServiceCompletionModal from './ServiceCompletionModal';
 import TipRequestModal from './TipRequestModal';
 import ExtraChargesModal from './ExtraChargesModal';
+import AdditionalHourModal from './AdditionalHourModal';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -213,6 +214,7 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showExtraChargesModal, setShowExtraChargesModal] = useState(false);
+  const [showAdditionalHourModal, setShowAdditionalHourModal] = useState(false);
   const [pecaUpdating, setPecaUpdating] = useState(false);
 
   const isMotoPeca = liveJob.service_type === 'buscar_peca_moto';
@@ -462,6 +464,14 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
           <Button
             size="sm"
             variant="outline"
+            className="w-full rounded-xl border-cyan-500 text-cyan-700 hover:bg-cyan-50"
+            onClick={() => setShowAdditionalHourModal(true)}
+          >
+            <Clock className="w-4 h-4 mr-1" /> Hora adicional
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             className="w-full rounded-xl border-orange-400 text-orange-600 hover:bg-orange-50"
             onClick={onShowAdditionalPoint}
           >
@@ -534,6 +544,13 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
         job={liveJob}
         onClose={() => setShowExtraChargesModal(false)}
         onSuccess={() => setShowExtraChargesModal(false)}
+      />
+    )}
+    {showAdditionalHourModal && (
+      <AdditionalHourModal
+        job={liveJob}
+        onClose={() => setShowAdditionalHourModal(false)}
+        onSuccess={() => setShowAdditionalHourModal(false)}
       />
     )}
     {lightboxUrl && (
