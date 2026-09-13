@@ -1,15 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Calendar, Save, Search, Clock, Package, AlertTriangle, TrendingUp, Wrench } from "lucide-react";
+import { ShieldCheck, Calendar, Search, Clock, Package, AlertTriangle, TrendingUp, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { differenceInDays, format } from "date-fns";
-import { logAdminAction } from '@/lib/adminLog';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid
@@ -26,12 +23,9 @@ const SERVICE_LABELS = {
 const PRAZO_PECA = 15;
 const PRAZO_GARANTIA = 90;
 
-export default function WarrantyAdmin({ adminUser }) {
-  const queryClient = useQueryClient();
+export default function WarrantyAdmin() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all'); // all | peca | garantia | expiring
-  const [daysPerService, setDaysPerService] = useState({});
-  const [savingId, setSavingId] = useState(null);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['warranty-requests'],
@@ -108,46 +102,6 @@ export default function WarrantyAdmin({ adminUser }) {
     return list;
   }, [classified, filter, search]);
 
-  const setWarranty = useMutation({
-    mutationFn: async ({ serviceId, days }) => {
-      setSavingId(serviceId);
-      const res = await fetch('/functions/setWarrantyPeriod', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceRequestId: serviceId, days, force: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao definir garantia');
-      return data;
-    },
-    onSuccess: (data, { serviceId, days }) => {
-      queryClient.invalidateQueries({ queryKey: ['warranty-requests'] });
-      toast.success(`Garantia de ${days} dias definida com sucesso`);
-      setDaysPerService(prev => { const c = { ...prev }; delete c[serviceId]; return c; });
-      const req = requests.find(r => r.id === serviceId);
-      logAdminAction({
-        action: 'warranty_period_set',
-        actorName: adminUser?.full_name || 'Admin',
-        actorEmail: adminUser?.email || '',
-        entityType: 'ServiceRequest',
-        entityId: serviceId,
-        entityLabel: req ? `${req.service_type} - ${req.client_name}` : serviceId,
-        newValue: `${days} dias`,
-      });
-    },
-    onError: (err) => toast.error(err.message),
-    onSettled: () => setSavingId(null),
-  });
-
-  const getDays = (serviceId) => {
-    if (daysPerService[serviceId] !== undefined) return daysPerService[serviceId];
-    const req = requests.find(r => r.id === serviceId);
-    if (req?.warranty_end_date && req?.updated_date) {
-      return differenceInDays(new Date(req.warranty_end_date), new Date(req.updated_date));
-    }
-    return 90;
-  };
-
   const stats = [
     { label: 'Total em Garantia', value: classified.length, icon: ShieldCheck, color: 'text-foreground', bg: 'bg-muted' },
     { label: 'Garantia de Peça', value: pecaCount, icon: Package, color: 'text-blue-700', bg: 'bg-blue-50 border border-blue-200', sub: '≤ 15 dias' },
@@ -171,6 +125,11 @@ export default function WarrantyAdmin({ adminUser }) {
           <h2 className="text-lg font-bold text-foreground">Dashboard de Garantias</h2>
           <p className="text-xs text-muted-foreground">Ordens de serviço finalizadas dentro do prazo de garantia</p>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-xl px-3 py-2 text-xs text-primary">
+        <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+        <span>O tempo de garantia por categoria é definido na aba <strong>Preços → Precificação por Categoria</strong>.</span>
       </div>
 
       {/* Stat cards */}
@@ -298,8 +257,6 @@ export default function WarrantyAdmin({ adminUser }) {
             const warrantyEnd = req.warranty_end_date ? new Date(req.warranty_end_date) : null;
             const expired = warrantyEnd && warrantyEnd < new Date();
             const diasRestantes = warrantyEnd ? differenceInDays(warrantyEnd, new Date()) : null;
-            const currentDays = getDays(req.id);
-            const isSaving = savingId === req.id;
             const isPeca = req._isPeca;
 
             return (
@@ -357,47 +314,6 @@ export default function WarrantyAdmin({ adminUser }) {
                         )}
                       </p>
                     </div>
-                  </div>
-
-                  {/* Editor de dias de garantia */}
-                  <div className="flex items-end gap-2 pt-2 border-t border-border">
-                    <div className="flex-1">
-                      <label className="text-xs font-medium text-muted-foreground block mb-1">
-                        Dias de garantia
-                      </label>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={3650}
-                        value={currentDays}
-                        onChange={e => setDaysPerService(prev => ({ ...prev, [req.id]: e.target.value }))}
-                        className="h-9"
-                      />
-                    </div>
-                    <div className="flex gap-1">
-                      {[15, 30, 60, 90, 180].map(d => (
-                        <button
-                          key={d}
-                          onClick={() => setDaysPerService(prev => ({ ...prev, [req.id]: d }))}
-                          className={cn(
-                            "px-2 py-1.5 rounded-lg text-xs font-semibold border transition-colors",
-                            Number(currentDays) === d
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-card text-muted-foreground border-border hover:border-primary/40"
-                          )}
-                        >
-                          {d}d
-                        </button>
-                      ))}
-                    </div>
-                    <Button
-                      size="sm"
-                      disabled={isSaving || !currentDays || Number(currentDays) <= 0}
-                      onClick={() => setWarranty.mutate({ serviceId: req.id, days: Number(currentDays) })}
-                    >
-                      <Save className="w-3.5 h-3.5 mr-1" />
-                      {isSaving ? 'Salvando...' : 'Salvar'}
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
