@@ -244,22 +244,32 @@ export default function AdminPanel() {
       <Tabs defaultValue="analytics">
         <TabsList className="mb-3 flex flex-wrap gap-1 h-auto p-1">
           <TabsTrigger value="analytics" className="text-xs px-2 py-1">📊 Analytics</TabsTrigger>
+          <TabsTrigger value="tickets" className="text-xs px-2 py-1">
+            🎧 Atendimento
+          </TabsTrigger>
+          <TabsTrigger value="blacklist" className="text-xs px-2 py-1">
+            🚫 Blacklist
+          </TabsTrigger>
           <TabsTrigger value="calendario" className="text-xs px-2 py-1">📅 Calendário</TabsTrigger>
-          <TabsTrigger value="optimizer" className="text-xs px-2 py-1">🎯 Rotas</TabsTrigger>
-          <TabsTrigger value="requests" className="text-xs px-2 py-1">Chamados</TabsTrigger>
-          <TabsTrigger value="providers" className="text-xs px-2 py-1">
-            Prestadores {pendingProviders.length > 0 && `(${pendingProviders.length})`}
-          </TabsTrigger>
-          <TabsTrigger value="pricing" className="text-xs px-2 py-1">
-            <DollarSign className="w-3 h-3 mr-0.5" /> Preços
-          </TabsTrigger>
-          <TabsTrigger value="repasse" className="text-xs px-2 py-1">
-            <DollarSign className="w-3 h-3 mr-0.5" /> Repasse
+          <TabsTrigger value="cashback-config" className="text-xs px-2 py-1">
+            💰 Cashback
           </TabsTrigger>
           <TabsTrigger value="checklists" className="text-xs px-2 py-1">✅ Checklists</TabsTrigger>
-          <TabsTrigger value="additional" className="text-xs px-2 py-1">➕ Pontos</TabsTrigger>
+          <TabsTrigger value="requests" className="text-xs px-2 py-1">Chamados</TabsTrigger>
+          <TabsTrigger value="consulta-cliente" className="text-xs px-2 py-1">
+            🔍 Clientes
+          </TabsTrigger>
+          <TabsTrigger value="coupons" className="text-xs px-2 py-1">
+            🎫 Cupons
+          </TabsTrigger>
+          <TabsTrigger value="documentos" className="text-xs px-2 py-1">
+            📄 Documentos
+          </TabsTrigger>
+          <TabsTrigger value="fechamento" className="text-xs px-2 py-1">
+            📆 Fechamento
+          </TabsTrigger>
           <TabsTrigger value="photos" className="text-xs px-2 py-1">
-            📷 {pendingPhotoProviders.length > 0 && `(${pendingPhotoProviders.length})`}
+            📷 Fotos {pendingPhotoProviders.length > 0 && `(${pendingPhotoProviders.length})`}
           </TabsTrigger>
           <TabsTrigger value="reserve-fund" className="text-xs px-2 py-1">
             🔐 Fundos
@@ -267,11 +277,8 @@ export default function AdminPanel() {
           <TabsTrigger value="invoices" className="text-xs px-2 py-1">
             🧾 NFe
           </TabsTrigger>
-          <TabsTrigger value="fechamento" className="text-xs px-2 py-1">
-            📆 Fechamento
-          </TabsTrigger>
-          <TabsTrigger value="consulta-cliente" className="text-xs px-2 py-1">
-            🔍 Clientes
+          <TabsTrigger value="logs" className="text-xs px-2 py-1">
+            📜 Logs
           </TabsTrigger>
           <TabsTrigger value="metricas" className="text-xs px-2 py-1">
             <Activity className="w-3 h-3 mr-0.5" /> Métricas
@@ -279,35 +286,28 @@ export default function AdminPanel() {
           <TabsTrigger value="performance" className="text-xs px-2 py-1">
             📈 Performance
           </TabsTrigger>
-          <TabsTrigger value="blacklist" className="text-xs px-2 py-1">
-            🚫 Blacklist
+          <TabsTrigger value="additional" className="text-xs px-2 py-1">➕ Pontos</TabsTrigger>
+          <TabsTrigger value="pricing" className="text-xs px-2 py-1">
+            <DollarSign className="w-3 h-3 mr-0.5" /> Preços
           </TabsTrigger>
-          <TabsTrigger value="documentos" className="text-xs px-2 py-1">
-            📄 Documentos
+          <TabsTrigger value="providers" className="text-xs px-2 py-1">
+            Prestadores {pendingProviders.length > 0 && `(${pendingProviders.length})`}
+          </TabsTrigger>
+          <TabsTrigger value="repasse" className="text-xs px-2 py-1">
+            <DollarSign className="w-3 h-3 mr-0.5" /> Repasse
+          </TabsTrigger>
+          <TabsTrigger value="reembolsos" className="text-xs px-2 py-1">
+            💸 Repasses/Saques
+          </TabsTrigger>
+          <TabsTrigger value="optimizer" className="text-xs px-2 py-1">🎯 Rotas</TabsTrigger>
+          <TabsTrigger value="sobretaxas" className="text-xs px-2 py-1">
+            ⏰ Sobretaxas
           </TabsTrigger>
           <TabsTrigger value="termos" className="text-xs px-2 py-1">
             📋 Termos Clientes
           </TabsTrigger>
           <TabsTrigger value="termos-prestador" className="text-xs px-2 py-1">
             📋 Termos Prestadores
-          </TabsTrigger>
-          <TabsTrigger value="tickets" className="text-xs px-2 py-1">
-            🎧 Atendimento
-          </TabsTrigger>
-          <TabsTrigger value="reembolsos" className="text-xs px-2 py-1">
-            💸 Repasses/Saques
-          </TabsTrigger>
-          <TabsTrigger value="coupons" className="text-xs px-2 py-1">
-            🎫 Cupons
-          </TabsTrigger>
-          <TabsTrigger value="cashback-config" className="text-xs px-2 py-1">
-            💰 Cashback
-          </TabsTrigger>
-          <TabsTrigger value="sobretaxas" className="text-xs px-2 py-1">
-            ⏰ Sobretaxas
-          </TabsTrigger>
-          <TabsTrigger value="logs" className="text-xs px-2 py-1">
-            📜 Logs
           </TabsTrigger>
         </TabsList>
 
