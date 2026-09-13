@@ -103,10 +103,9 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
 
     const label = tipo === 'retorno_peca' ? 'RETORNO POR PEÇA' : 'RETORNO GARANTIA';
 
-    // Caso: retorno por peça → cria OS nova em aguardando (sem provider_id)
-    // O assignServiceToProvider prioriza o prestador original via retorno_origem_os_id
-    // e o chamado chega como um novo chamado normal para o prestador
-    if (tipo === 'retorno_peca' && request.provider_id) {
+    // Caso: retorno por peça → cria OS agendada com o prestador original
+    // O cliente escolhe um horário na agenda do prestador do atendimento original
+    if (tipo === 'retorno_peca' && request.provider_id && scheduledDate && scheduledTime) {
       try {
         await base44.entities.ServiceRequest.create({
           service_type: request.service_type,
@@ -122,8 +121,13 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           cep: request.cep,
           latitude: request.latitude,
           longitude: request.longitude,
-          modality: 'imediato',
-          status: 'aguardando',
+          modality: 'agendado',
+          scheduled_date: scheduledDate,
+          scheduled_time: scheduledTime,
+          status: 'agendado',
+          provider_id: request.provider_id,
+          provider_name: request.provider_name,
+          provider_phone: request.provider_phone,
           retorno_origem_os_id: request.id,
           retorno_estimated_hours: retornoHours,
         });
@@ -231,9 +235,7 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           <h3 className="text-xl font-bold text-foreground">Retorno agendado com sucesso!</h3>
           <p className="text-sm text-muted-foreground">
             {isDirectSchedule
-              ? (tipo === 'retorno_peca'
-                ? `Uma nova OS de retorno foi enviada para ${request?.provider_name || 'o prestador'} como um novo chamado. Ele irá aceitar e entrar em contato.`
-                : `O retorno foi agendado com ${request?.provider_name || 'o prestador'} para ${scheduledDate} às ${scheduledTime}. O prestador foi notificado.`)
+              ? `O retorno foi agendado com ${request?.provider_name || 'o prestador'} para ${scheduledDate} às ${scheduledTime}. O prestador foi notificado.`
               : 'Sua solicitação foi registrada. Você será redirecionado para buscar um prestador disponível.'}
           </p>
           <div className="text-4xl font-black text-primary">{countdown}</div>
@@ -427,6 +429,26 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           </div>
         )}
 
+        {/* Agenda do prestador original — retorno por peça */}
+        {tipo === 'retorno_peca' && !prazoExpirado && request?.provider_id && descricao.trim().length >= 5 && (
+          <div className="space-y-2 border-t border-border pt-3">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-1">
+              <Clock className="w-4 h-4 text-blue-600" />
+              Escolha um horário na agenda do prestador
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {request?.provider_name || 'Prestador'} atenderá o retorno no horário selecionado.
+            </p>
+            <InteractiveScheduleCalendar
+              selectedDate={scheduledDate}
+              selectedTime={scheduledTime}
+              onDateChange={setScheduledDate}
+              onTimeChange={setScheduledTime}
+              providerId={request?.provider_id}
+            />
+          </div>
+        )}
+
         {/* Passo: escolher prestador */}
         {showAgendamento && (
           <div className="space-y-3 border-t border-border pt-3">
@@ -510,11 +532,12 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           disabled={
             !tipo || !descricao.trim() || loading || prazoExpirado ||
             (tipo === 'retorno_garantia' && request?.provider_id ? agendarComOriginal === null : false) ||
-            (tipo === 'retorno_garantia' && agendarComOriginal === true && (!scheduledDate || !scheduledTime))
+            (tipo === 'retorno_garantia' && agendarComOriginal === true && (!scheduledDate || !scheduledTime)) ||
+            (tipo === 'retorno_peca' && request?.provider_id && (!scheduledDate || !scheduledTime))
           }
           onClick={handleSubmit}
         >
-          {tipo === 'retorno_peca' ? '📋 Abrir OS de Retorno para o Prestador' : '📋 Abrir OS de Retorno'}
+          {tipo === 'retorno_peca' ? '📋 Agendar Retorno com Prestador' : '📋 Abrir OS de Retorno'}
         </Button>
 
         {/* Info de prazos */}
