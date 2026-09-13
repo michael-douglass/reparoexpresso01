@@ -16,14 +16,21 @@ Deno.serve(async (req) => {
     }
 
     // Dias de garantia: informado > padrão da categoria > 90
+    // warranty_days = 0 na categoria significa "sem garantia"
     let warrantyDays = Number(days) && Number(days) > 0 ? Math.floor(Number(days)) : null;
+    let semGarantia = false;
     if (!warrantyDays) {
       try {
         const pricings = await base44.entities.ServicePricing.filter({ service_type: service.service_type });
         const catPricing = pricings.find(p => !p.city && !p.state);
-        warrantyDays = (catPricing?.warranty_days && Number(catPricing.warranty_days) > 0)
-          ? Math.floor(Number(catPricing.warranty_days))
-          : 90;
+        if (catPricing && Number(catPricing.warranty_days) === 0) {
+          semGarantia = true;
+          warrantyDays = 0;
+        } else {
+          warrantyDays = (catPricing?.warranty_days && Number(catPricing.warranty_days) > 0)
+            ? Math.floor(Number(catPricing.warranty_days))
+            : 90;
+        }
       } catch {
         warrantyDays = 90;
       }
@@ -34,6 +41,24 @@ Deno.serve(async (req) => {
       return Response.json({
         message: 'Garantia já estava definida',
         warranty_end_date: service.warranty_end_date,
+      });
+    }
+
+    // Sem garantia: registra data de término = data de conclusão (já expirada)
+    if (semGarantia) {
+      const baseDate = service.status === 'concluido' && service.updated_date
+        ? new Date(service.updated_date)
+        : new Date();
+      await base44.entities.ServiceRequest.update(serviceRequestId, {
+        warranty_end_date: baseDate.toISOString(),
+        warranty_status: 'expirada',
+      });
+      return Response.json({
+        success: true,
+        warranty_end_date: baseDate.toISOString(),
+        warranty_days: 0,
+        warranty_status: 'expirada',
+        message: 'Serviço sem garantia (categoria sem garantia)',
       });
     }
 

@@ -62,7 +62,7 @@ export default function ServicePricingByCategory() {
     const { id, ...data } = editForm;
     data.price_min = Number(data.price_min) || null;
     data.price_max = Number(data.price_max) || null;
-    data.warranty_days = data.warranty_days ? Number(data.warranty_days) : null;
+    data.warranty_days = data.warranty_days === 0 ? 0 : (data.warranty_days ? Number(data.warranty_days) : null);
     updateMutation.mutate({ id, ...data });
   };
 
@@ -71,7 +71,7 @@ export default function ServicePricingByCategory() {
       ...newPricing,
       price_min: Number(newPricing.price_min) || null,
       price_max: Number(newPricing.price_max) || null,
-      warranty_days: newPricing.warranty_days ? Number(newPricing.warranty_days) : null,
+      warranty_days: newPricing.warranty_days === 0 ? 0 : (newPricing.warranty_days ? Number(newPricing.warranty_days) : null),
     };
     createMutation.mutate(data);
   };
@@ -149,15 +149,28 @@ export default function ServicePricingByCategory() {
               <Label className="text-xs flex items-center gap-1 font-semibold text-primary">
                 <ShieldCheck className="w-3.5 h-3.5" /> Dias de Garantia
               </Label>
-              <Input
-                type="number"
-                min={1}
-                placeholder="90"
-                value={newPricing.warranty_days ?? ''}
-                onChange={(e) => setNewPricing({ ...newPricing, warranty_days: e.target.value ? Number(e.target.value) : null })}
-                className="text-sm h-8 mt-1"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newPricing.warranty_days === 0}
+                  onChange={(e) => setNewPricing({ ...newPricing, warranty_days: e.target.checked ? 0 : 90 })}
+                  className="w-4 h-4 rounded border-border"
+                />
+                <span className="text-xs font-medium text-foreground">Sem garantia (ex: reboque)</span>
+              </label>
+              {newPricing.warranty_days !== 0 && (
+                <>
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="90"
+                    value={newPricing.warranty_days ?? ''}
+                    onChange={(e) => setNewPricing({ ...newPricing, warranty_days: e.target.value ? Number(e.target.value) : null })}
+                    className="text-sm h-8 mt-2"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
+                </>
+              )}
             </div>
             <div className="flex gap-2">
               <Button
@@ -222,14 +235,27 @@ export default function ServicePricingByCategory() {
                     <Label className="text-xs flex items-center gap-1 font-semibold text-primary">
                       <ShieldCheck className="w-3.5 h-3.5" /> Dias de Garantia
                     </Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={editForm.warranty_days ?? ''}
-                      onChange={(e) => setEditForm({ ...editForm, warranty_days: e.target.value ? Number(e.target.value) : null })}
-                      className="text-sm h-8 mt-1"
-                    />
-                    <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editForm.warranty_days === 0}
+                        onChange={(e) => setEditForm({ ...editForm, warranty_days: e.target.checked ? 0 : 90 })}
+                        className="w-4 h-4 rounded border-border"
+                      />
+                      <span className="text-xs font-medium text-foreground">Sem garantia (ex: reboque)</span>
+                    </label>
+                    {editForm.warranty_days !== 0 && (
+                      <>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={editForm.warranty_days ?? ''}
+                          onChange={(e) => setEditForm({ ...editForm, warranty_days: e.target.value ? Number(e.target.value) : null })}
+                          className="text-sm h-8 mt-2"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
+                      </>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -260,9 +286,15 @@ export default function ServicePricingByCategory() {
                       {pricing.note && <span className="text-blue-600">({pricing.note})</span>}
                     </div>
                     <div className="flex items-center gap-1 mt-1 text-xs">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
-                        🛡️ {pricing.warranty_days || 90} dias de garantia
-                      </span>
+                      {pricing.warranty_days === 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 font-semibold">
+                          🚫 Sem garantia
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-semibold">
+                          🛡️ {pricing.warranty_days || 90} dias de garantia
+                        </span>
+                      )}
                     </div>
                     {pricing.city && <p className="text-xs text-muted-foreground mt-1">📍 {pricing.city}, {pricing.state}</p>}
                   </div>
