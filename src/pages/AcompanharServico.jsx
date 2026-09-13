@@ -220,15 +220,20 @@ export default function AcompanharServico() {
     );
   }
 
-  // OS do mesmo lote: criadas com menos de 5 minutos de diferença pela mesma pessoa, exceto canceladas
-  // Deduplica por id para evitar que a mesma OS apareça duas vezes (race entre carga inicial e subscription)
+  // OS do mesmo lote: agrupadas pelo mesmo batch_id (criadas na mesma solicitação).
+  // Fallback: janela de 60 segundos para OS antigas sem batch_id. Canceladas não entram.
+  // Deduplica por id para evitar que a mesma OS apareça duas vezes (race entre carga inicial e subscription).
   const batchRequests = allRequests
     .filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i)
     .filter(r => {
+      if (r.status === 'cancelado') return false;
+      if (request?.batch_id && r.batch_id) {
+        return r.batch_id === request.batch_id;
+      }
+      // Fallback para OS antigas sem batch_id
       if (!request?.created_date) return false;
       const diffMs = Math.abs(new Date(r.created_date) - new Date(request.created_date));
-      const diffMin = diffMs / 60000;
-      return diffMin <= 5 && r.status !== 'cancelado';
+      return diffMs <= 60000;
     });
   const otherBatchRequests = batchRequests.filter(r => r.id !== id);
 

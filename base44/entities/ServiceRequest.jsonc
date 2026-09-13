@@ -6,6 +6,10 @@
       "type": "string",
       "description": "N\u00famero \u00fanico de atendimento (ex: ATD-000123)"
     },
+    "batch_id": {
+      "type": "string",
+      "description": "ID do lote: agrupa OS criadas na mesma solicita\u00e7\u00e3o (multi-servi\u00e7o ou 2\u00ba prestador)"
+    },
     "client_id": {
       "type": "string",
       "description": "ID do cliente"

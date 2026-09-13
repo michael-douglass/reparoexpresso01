@@ -570,6 +570,7 @@ export default function SolicitarServico() {
 
       const serviceNumber = await generateServiceNumber();
       const now = new Date().toISOString();
+      const batchId = `BATCH-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 
       const baseData = {
         ...cleanData,
@@ -578,6 +579,7 @@ export default function SolicitarServico() {
         status: 'aguardando',
         estimated_arrival_minutes: cleanData.estimated_arrival_minutes ?? null,
         service_number: serviceNumber,
+        batch_id: batchId,
         security_password: generatePassword(),
         validation_password: generatePassword(),
         passwords_generated_at: now,
