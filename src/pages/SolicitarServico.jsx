@@ -35,6 +35,9 @@ import OutrosServicoModal from "@/components/OutrosServicoModal";
 import BuscarPecaMotoModal from "@/components/BuscarPecaMotoModal";
 import InteractiveScheduleCalendar from "@/components/InteractiveScheduleCalendar";
 import SurchargeAlert from "@/components/SurchargeAlert";
+import RetornoModal from "@/components/RetornoModal";
+import { differenceInDays } from "date-fns";
+import { ShieldCheck, Package } from "lucide-react";
 
 const URGENCY = [
   { value: "agora", label: "Agora", desc: "Preciso urgente" },
@@ -50,6 +53,7 @@ export default function SolicitarServico() {
    const [currentUser, setCurrentUser] = useState(null);
    const [userLoaded, setUserLoaded] = useState(false);
    const [tabSolicitar, setTabSolicitar] = useState('novo');
+   const [retornoRequest, setRetornoRequest] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(u => { setCurrentUser(u); setUserLoaded(true); }).catch(() => setUserLoaded(true));
@@ -792,13 +796,17 @@ export default function SolicitarServico() {
         <div className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-1">Serviços realizados</h2>
-            <p className="text-muted-foreground mb-4">Solicite retorno para o mesmo prestador</p>
+            <p className="text-muted-foreground mb-4">Solicite retorno em garantia ou por peça</p>
           </div>
           {warrantyServices.length > 0 ? (
             <div className="space-y-3">
               <WarrantyBanner warrantyServices={warrantyServices} />
               <div className="space-y-3">
-                {warrantyServices.map(service => (
+                {warrantyServices.map(service => {
+                  const dias = differenceInDays(new Date(), new Date(service.updated_date));
+                  const pecaDisponivel = dias <= 15;
+                  const garantiaDisponivel = dias <= 90;
+                  return (
                   <Card key={service.id} className="overflow-hidden">
                     <CardContent className="p-4">
                       <div className="space-y-3">
@@ -813,23 +821,45 @@ export default function SolicitarServico() {
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">
-                            {new Date(service.updated_date).toLocaleDateString('pt-BR')}
+                            {new Date(service.updated_date).toLocaleDateString('pt-BR')} · há {dias} dia{dias !== 1 ? 's' : ''}
                           </span>
                           {service.provider_name && (
                             <span className="text-primary font-semibold">{service.provider_name}</span>
                           )}
                         </div>
+                        {/* Badges de retorno disponíveis */}
+                        <div className="flex flex-wrap gap-2">
+                          <span className={cn(
+                            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border",
+                            pecaDisponivel
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-muted text-muted-foreground border-border line-through"
+                          )}>
+                            <Package className="w-3 h-3" />
+                            {pecaDisponivel ? `Peça (${15 - dias}d restantes)` : 'Peça (expirado)'}
+                          </span>
+                          <span className={cn(
+                            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border",
+                            garantiaDisponivel
+                              ? "bg-orange-50 text-orange-700 border-orange-200"
+                              : "bg-muted text-muted-foreground border-border line-through"
+                          )}>
+                            <ShieldCheck className="w-3 h-3" />
+                            {garantiaDisponivel ? `Garantia (${90 - dias}d restantes)` : 'Garantia (expirado)'}
+                          </span>
+                        </div>
                         <Button
-                          onClick={() => navigate(`/solicitar?tipo=${service.service_type}`)}
+                          onClick={() => setRetornoRequest(service)}
                           className="w-full text-sm"
-                          variant="outline"
                         >
+                          <RotateCcw className="w-4 h-4 mr-1" />
                           Solicitar Retorno
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -2298,6 +2328,13 @@ export default function SolicitarServico() {
           setDescriptionsPerService(prev => ({ ...prev, outros: { description: desc, photos: fotos || [] } }));
           setShowOutrosModal(false);
         }}
+      />
+    )}
+
+    {retornoRequest && (
+      <RetornoModal
+        request={retornoRequest}
+        onClose={() => setRetornoRequest(null)}
       />
     )}
     </>
