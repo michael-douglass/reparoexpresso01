@@ -13,6 +13,7 @@ import ServiceCompletionModal from './ServiceCompletionModal';
 import TipRequestModal from './TipRequestModal';
 import ExtraChargesModal from './ExtraChargesModal';
 import AdditionalHourModal from './AdditionalHourModal';
+import ValidationPasswordInput from './ValidationPasswordInput';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -208,7 +209,7 @@ function useLocalArrivalMinutes(job, active) {
 }
 
 export default function ActiveJobCard({ job, providerName, onUpdateStatus, onShowChecklist, onShowAdditionalPoint, isPending, provider }) {
-  const [validationInput, setValidationInput] = useState('');
+  const [validationOk, setValidationOk] = useState(!job?.validation_password);
   const [liveJob, setLiveJob] = useState(job);
   const [lightboxUrl, setLightboxUrl] = useState(null);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -280,7 +281,6 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
     const nextStep = STEPS[currentStepIndex + 1];
     if (!nextStep) return;
     onUpdateStatus({ id: liveJob.id, status: nextStep.status });
-    setValidationInput('');
   };
 
   const handleCompleteService = (completionType, data = {}) => {
@@ -375,30 +375,16 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
 
     if (liveJob.status === 'a_caminho') {
       const needsValidation = !!liveJob.validation_password;
-      const validationOk = !needsValidation || validationInput === liveJob.validation_password;
       const cLat = liveJob.client_latitude || liveJob.latitude;
       const cLng = liveJob.client_longitude || liveJob.longitude;
 
       return (
         <div className="space-y-3">
           {needsValidation && (
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3">
-              <p className="text-xs text-blue-700 font-semibold mb-2 flex items-center gap-1">
-                <KeyRound className="w-3.5 h-3.5" /> Digite a senha informada pelo cliente
-              </p>
-              <Input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="000000"
-                value={validationInput}
-                onChange={e => setValidationInput(e.target.value.replace(/\D/g, ''))}
-                className="rounded-xl text-center font-mono text-xl tracking-widest h-12"
-              />
-              {validationInput.length === 6 && !validationOk && (
-                <p className="text-xs text-red-600 mt-1 text-center">Senha incorreta. Peça novamente ao cliente.</p>
-              )}
-            </div>
+            <ValidationPasswordInput
+              expectedPassword={liveJob.validation_password}
+              onValidationChange={setValidationOk}
+            />
           )}
           {cLat && cLng && (
             <a
