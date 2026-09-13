@@ -46,8 +46,10 @@ export default function AdminDashboard({ stats, requests, providers }) {
     { label: "Receita", value: `R$ ${Math.floor(stats.revenue).toLocaleString('pt-BR')}`, icon: TrendingUp, color: "text-primary" },
   ];
 
-  // Category breakdown — all non-cancelled requests
+  // Category breakdown — sempre mostra as categorias principais mesmo sem chamados
+  const MAIN_CATEGORIES = ['Elétrica', 'Hidráulica', 'Fechadura', 'Reboque'];
   const categoryCounts = {};
+  MAIN_CATEGORIES.forEach(c => { categoryCounts[c] = 0; });
   requests.forEach(r => {
     if (r.status === 'cancelado') return;
     const label = SERVICE_LABELS[r.service_type] || r.service_type || 'Outros';
