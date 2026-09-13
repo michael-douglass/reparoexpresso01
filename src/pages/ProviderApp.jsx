@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { MapPin, Phone, Clock, CheckCircle2, Wrench, Star, BellRing, X, Check, ClipboardList, Calendar, CalendarOff, PauseCircle, BarChart3, Lock } from "lucide-react";
+import { MapPin, Phone, Clock, CheckCircle2, Wrench, Star, BellRing, X, Check, ClipboardList, Calendar, CalendarOff, PauseCircle, PlayCircle, BarChart3, Lock } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import ProviderUnavailabilitySection from '../components/ProviderUnavailabilitySection';
 import GoogleReviewQRCode from '../components/GoogleReviewQRCode';
@@ -698,6 +698,14 @@ export default function ProviderApp() {
             <p className="text-xs font-bold text-yellow-800">Serviço em espera</p>
             <p className="text-xs text-yellow-700 truncate">{waitingJob.client_name} · {waitingJob.address}</p>
           </div>
+          <Button
+            size="sm"
+            className="rounded-xl bg-primary text-primary-foreground font-bold flex-shrink-0"
+            disabled={updateJobStatus.isPending}
+            onClick={() => updateJobStatus.mutate({ id: waitingJob.id, status: 'em_andamento' })}
+          >
+            <PlayCircle className="w-4 h-4 mr-1" /> Retomar
+          </Button>
         </div>
       )}
 
