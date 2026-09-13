@@ -1,29 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { X, Clock, Loader2, AlertCircle } from 'lucide-react';
+import { X, Clock, Loader2, AlertCircle, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdditionalHourModal({ job, onClose, onSuccess }) {
   const [hours, setHours] = useState(1);
-  const [rate, setRate] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hourlyRate, setHourlyRate] = useState(null);
+  const [loadingRate, setLoadingRate] = useState(true);
+  const [manualRate, setManualRate] = useState('');
 
   const originalPrice = job.final_price || job.estimated_price || 0;
-  const subtotal = (hours || 0) * (parseFloat(rate) || 0);
+  const effectiveRate = hourlyRate ?? (parseFloat(manualRate) || 0);
+  const subtotal = (hours || 0) * effectiveRate;
   const newTotal = originalPrice + subtotal;
+
+  // Busca a regra de precificação do tipo de serviço
+  useEffect(() => {
+    if (!job?.service_type) { setLoadingRate(false); return; }
+    setLoadingRate(true);
+    base44.entities.ServicePricing.filter({ service_type: job.service_type })
+      .then(pricingList => {
+        // Prioriza a regra padrão (sem cidade definida)
+        const defaultRule = pricingList.find(p => !p.city) || pricingList[0];
+        if (defaultRule && defaultRule.price_min > 0) {
+          setHourlyRate(defaultRule.price_min);
+        } else {
+          setHourlyRate(null);
+        }
+      })
+      .catch(() => setHourlyRate(null))
+      .finally(() => setLoadingRate(false));
+  }, [job?.service_type]);
 
   const handleSubmit = async () => {
     if (!hours || hours <= 0) {
       toast.error('Informe a quantidade de horas');
       return;
     }
-    if (!rate || parseFloat(rate) <= 0) {
-      toast.error('Informe o valor da hora');
+    if (!effectiveRate || effectiveRate <= 0) {
+      toast.error('Não foi possível determinar o valor da hora. Informe manualmente.');
       return;
     }
 
@@ -33,14 +54,14 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
         type: 'hours',
         description: description.trim() || 'Hora adicional de trabalho',
         quantity: parseFloat(hours),
-        price: parseFloat(rate),
+        price: effectiveRate,
       };
 
       await base44.entities.ServiceRequest.update(job.id, {
         extra_charges: {
           items: [item],
           total: subtotal,
-          notes: `Hora adicional: ${hours}h × R$ ${parseFloat(rate).toFixed(2)}`,
+          notes: `Hora adicional: ${hours}h × R$ ${effectiveRate.toFixed(2)}`,
           requested_at: new Date().toISOString(),
           status: 'pending_approval',
           new_total: newTotal,
@@ -57,7 +78,7 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
           items: [item],
           extra_total: subtotal,
           new_total: newTotal,
-          notes: `Hora adicional: ${hours}h × R$ ${parseFloat(rate).toFixed(2)}`,
+          notes: `Hora adicional: ${hours}h × R$ ${effectiveRate.toFixed(2)}`,
         });
       } catch (notifyError) {
         console.error('Erro ao notificar cliente:', notifyError);
@@ -92,7 +113,7 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
         {/* Aviso */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-700">
           <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <p>O serviço demorou mais que o previsto? Solicite o pagamento de horas adicionais. O cliente receberá a cobrança para aprovar.</p>
+          <p>O serviço demorou mais que o previsto? Informe o tempo extra e o sistema calcula o valor automaticamente conforme a tabela de precificação.</p>
         </div>
 
         {/* Quantidade de horas */}
@@ -143,18 +164,38 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
           </div>
         </div>
 
-        {/* Valor da hora */}
+        {/* Valor da hora — auto-calculado pela regra de precificação */}
         <div className="space-y-1.5">
-          <Label>Valor por hora (R$) *</Label>
-          <Input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Ex: 50,00"
-            value={rate}
-            onChange={e => setRate(e.target.value)}
-            className="rounded-xl"
-          />
+          <Label className="flex items-center gap-1.5">
+            <Calculator className="w-3.5 h-3.5 text-primary" />
+            Valor da hora (calculado automaticamente)
+          </Label>
+          {loadingRate ? (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-muted text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Buscando regra de precificação...
+            </div>
+          ) : hourlyRate != null ? (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/30">
+              <span className="text-sm text-muted-foreground">Valor/hora conforme tabela</span>
+              <span className="text-lg font-bold text-primary">R$ {hourlyRate.toFixed(2)}</span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-700">
+                Nenhuma regra de precificação cadastrada para este serviço. Informe o valor manualmente.
+              </div>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Valor por hora (R$)"
+                value={manualRate}
+                onChange={e => setManualRate(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+          )}
         </div>
 
         {/* Descrição */}
@@ -174,7 +215,7 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
           <p className="text-xs font-semibold text-foreground">R$ {originalPrice.toFixed(2)}</p>
           <div className="border-t border-primary/20 pt-2 mt-2">
             <p className="text-xs text-muted-foreground">
-              + {hours || 0}h × R$ {(parseFloat(rate) || 0).toFixed(2)}:
+              + {hours || 0}h × R$ {effectiveRate.toFixed(2)}:
             </p>
             <p className="text-sm font-bold text-primary">R$ {subtotal.toFixed(2)}</p>
           </div>
@@ -191,7 +232,7 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={loading || !hours || !rate}
+            disabled={loading || !hours || !effectiveRate}
             className="flex-1 rounded-xl bg-primary text-primary-foreground font-bold"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Clock className="w-4 h-4 mr-2" />}
