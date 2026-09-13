@@ -156,7 +156,7 @@ export default function ServicePricingByCategory() {
                   onChange={(e) => setNewPricing({ ...newPricing, warranty_days: e.target.checked ? 0 : 90 })}
                   className="w-4 h-4 rounded border-border"
                 />
-                <span className="text-xs font-medium text-foreground">Sem garantia (ex: reboque)</span>
+                <span className="text-xs font-medium text-foreground">Sem garantia</span>
               </label>
               {newPricing.warranty_days !== 0 && (
                 <>
@@ -242,7 +242,7 @@ export default function ServicePricingByCategory() {
                         onChange={(e) => setEditForm({ ...editForm, warranty_days: e.target.checked ? 0 : 90 })}
                         className="w-4 h-4 rounded border-border"
                       />
-                      <span className="text-xs font-medium text-foreground">Sem garantia (ex: reboque)</span>
+                      <span className="text-xs font-medium text-foreground">Sem garantia</span>
                     </label>
                     {editForm.warranty_days !== 0 && (
                       <>
