@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, MapPin, Calendar, DollarSign, Star, Clock, CheckCircle2, AlertCircle, Loader2, Plus, Package, RotateCcw } from "lucide-react";
+import { ChevronRight, MapPin, Calendar, DollarSign, Star, Clock, CheckCircle2, AlertCircle, Loader2, Plus, Package, RotateCcw, ShieldCheck, ShieldX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
 import RetornoModal from '@/components/RetornoModal';
@@ -274,6 +274,25 @@ export default function MeusPedidos() {
                             <p className="font-semibold text-primary">R$ {req.final_price.toFixed(2)}</p>
                           )}
                         </div>
+
+                        {req.status === 'concluido' && req.warranty_end_date && (() => {
+                          const isExpired = new Date(req.warranty_end_date) < new Date();
+                          return (
+                            <div className={cn(
+                              "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold",
+                              isExpired
+                                ? "bg-red-50 text-red-700 border border-red-200"
+                                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            )}>
+                              {isExpired ? <ShieldX className="w-4 h-4 flex-shrink-0" /> : <ShieldCheck className="w-4 h-4 flex-shrink-0" />}
+                              <span>
+                                {isExpired
+                                  ? `Garantia expirada em ${new Date(req.warranty_end_date).toLocaleDateString('pt-BR')}`
+                                  : `Garantia ativa até ${new Date(req.warranty_end_date).toLocaleDateString('pt-BR')}`}
+                              </span>
+                            </div>
+                          );
+                        })()}
 
                         {req.checklist && (req.checklist.items?.length > 0 || req.checklist.photos?.length > 0 || req.checklist.notes) && (
                           <div className="bg-muted/40 rounded-lg p-2.5 space-y-2">
