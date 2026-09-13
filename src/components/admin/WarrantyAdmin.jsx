@@ -5,13 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ShieldCheck, Calendar, Save, Search, Clock, Package } from "lucide-react";
+import { ShieldCheck, Calendar, Save, Search, Clock, Package, AlertTriangle, TrendingUp, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { differenceInDays, format } from "date-fns";
 import { logAdminAction } from '@/lib/adminLog';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
 
 const SERVICE_LABELS = {
@@ -28,6 +29,7 @@ const PRAZO_GARANTIA = 90;
 export default function WarrantyAdmin({ adminUser }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all'); // all | peca | garantia | expiring
   const [daysPerService, setDaysPerService] = useState({});
   const [savingId, setSavingId] = useState(null);
 
@@ -46,31 +48,65 @@ export default function WarrantyAdmin({ adminUser }) {
     });
   }, [requests]);
 
-  // Dados para o gráfico: garantia de peça (≤15d) vs garantia (16-90d)
-  const chartData = useMemo(() => {
-    let peca = 0;
-    let garantia = 0;
-    inWarranty.forEach(r => {
+  // Classifica cada OS em peça (≤15d) ou garantia (16-90d)
+  const classified = useMemo(() => {
+    return inWarranty.map(r => {
       const dias = differenceInDays(new Date(), new Date(r.updated_date));
-      if (dias <= PRAZO_PECA) peca++;
-      else garantia++;
+      return { ...r, _dias: dias, _isPeca: dias <= PRAZO_PECA };
     });
-    return [
-      { name: 'Garantia de Peça', value: peca, color: '#3b82f6' },
-      { name: 'Garantia', value: garantia, color: '#f97316' },
-    ];
   }, [inWarranty]);
 
+  const pecaCount = classified.filter(r => r._isPeca).length;
+  const garantiaCount = classified.filter(r => !r._isPeca).length;
+  const expiringSoon = classified.filter(r => {
+    const warrantyEnd = r.warranty_end_date ? new Date(r.warranty_end_date) : null;
+    if (!warrantyEnd) return false;
+    const restantes = differenceInDays(warrantyEnd, new Date());
+    return restantes >= 0 && restantes <= 7;
+  }).length;
+
+  // Dados para o gráfico de pizza
+  const pieData = [
+    { name: 'Garantia de Peça', value: pecaCount, color: '#3b82f6' },
+    { name: 'Garantia de Serviço', value: garantiaCount, color: '#f97316' },
+  ];
+
+  // Dados para o gráfico de barras: por tipo de serviço, split peça vs garantia
+  const barData = useMemo(() => {
+    const map = {};
+    classified.forEach(r => {
+      const label = SERVICE_LABELS[r.service_type] || r.service_type || 'Outros';
+      if (!map[label]) map[label] = { name: label, peca: 0, garantia: 0 };
+      if (r._isPeca) map[label].peca++;
+      else map[label].garantia++;
+    });
+    return Object.values(map).sort((a, b) => (b.peca + b.garantia) - (a.peca + a.garantia));
+  }, [classified]);
+
+  // Filtro + busca
   const filtered = useMemo(() => {
-    if (!search.trim()) return inWarranty;
-    const q = search.toLowerCase();
-    return inWarranty.filter(r =>
-      (r.client_name || '').toLowerCase().includes(q) ||
-      (r.provider_name || '').toLowerCase().includes(q) ||
-      (r.service_type || '').toLowerCase().includes(q) ||
-      (r.service_number || '').toLowerCase().includes(q)
-    );
-  }, [inWarranty, search]);
+    let list = classified;
+    if (filter === 'peca') list = list.filter(r => r._isPeca);
+    else if (filter === 'garantia') list = list.filter(r => !r._isPeca);
+    else if (filter === 'expiring') {
+      list = list.filter(r => {
+        const we = r.warranty_end_date ? new Date(r.warranty_end_date) : null;
+        if (!we) return false;
+        const restantes = differenceInDays(we, new Date());
+        return restantes >= 0 && restantes <= 7;
+      });
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(r =>
+        (r.client_name || '').toLowerCase().includes(q) ||
+        (r.provider_name || '').toLowerCase().includes(q) ||
+        (r.service_type || '').toLowerCase().includes(q) ||
+        (r.service_number || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [classified, filter, search]);
 
   const setWarranty = useMutation({
     mutationFn: async ({ serviceId, days }) => {
@@ -112,94 +148,159 @@ export default function WarrantyAdmin({ adminUser }) {
     return 90;
   };
 
+  const stats = [
+    { label: 'Total em Garantia', value: classified.length, icon: ShieldCheck, color: 'text-foreground', bg: 'bg-muted' },
+    { label: 'Garantia de Peça', value: pecaCount, icon: Package, color: 'text-blue-700', bg: 'bg-blue-50 border border-blue-200', sub: '≤ 15 dias' },
+    { label: 'Garantia de Serviço', value: garantiaCount, icon: Wrench, color: 'text-orange-700', bg: 'bg-orange-50 border border-orange-200', sub: '16–90 dias' },
+    { label: 'Expirando em ≤7d', value: expiringSoon, icon: AlertTriangle, color: 'text-red-700', bg: 'bg-red-50 border border-red-200', sub: 'Urgente' },
+  ];
+
+  const filterTabs = [
+    { id: 'all', label: 'Todas' },
+    { id: 'peca', label: 'Peça' },
+    { id: 'garantia', label: 'Serviço' },
+    { id: 'expiring', label: 'Expirando' },
+  ];
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-2">
+      {/* Header */}
+      <div className="flex items-center gap-2">
         <ShieldCheck className="w-5 h-5 text-primary" />
         <div>
-          <h2 className="text-lg font-bold text-foreground">Garantias Ativas</h2>
-          <p className="text-xs text-muted-foreground">Serviços concluídos dentro do prazo de garantia (até 90 dias)</p>
+          <h2 className="text-lg font-bold text-foreground">Dashboard de Garantias</h2>
+          <p className="text-xs text-muted-foreground">Ordens de serviço finalizadas dentro do prazo de garantia</p>
         </div>
       </div>
 
-      {/* Gráfico */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="w-full sm:w-1/2 h-[200px]">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {stats.map(s => {
+          const Icon = s.icon;
+          return (
+            <Card key={s.label} className={cn("border-0", s.bg)}>
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/60 flex items-center justify-center flex-shrink-0">
+                  <Icon className={cn("w-5 h-5", s.color)} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">{s.label}</p>
+                  <p className={cn("text-2xl font-black leading-none", s.color)}>{s.value}</p>
+                  {s.sub && <p className="text-[9px] text-muted-foreground mt-0.5">{s.sub}</p>}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Pizza */}
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Distribuição por Tipo
+            </h3>
+            <div className="h-[220px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={chartData}
+                    data={pieData}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={70}
-                    label={(entry) => entry.value}
+                    outerRadius={75}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    labelLine={false}
                   >
-                    {chartData.map((entry, i) => (
+                    {pieData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex-1 space-y-2 w-full">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50 border border-blue-200">
-                <div className="flex items-center gap-2">
-                  <Package className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-semibold text-blue-800">Garantia de Peça</span>
-                </div>
-                <span className="text-lg font-bold text-blue-700">{chartData[0].value}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground pl-2">Serviços concluídos há até 15 dias (direito a retorno por peça)</p>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-orange-50 border border-orange-200">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-orange-600" />
-                  <span className="text-sm font-semibold text-orange-800">Garantia</span>
-                </div>
-                <span className="text-lg font-bold text-orange-700">{chartData[1].value}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground pl-2">Serviços concluídos entre 16 e 90 dias (apenas retorno em garantia)</p>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-muted mt-2">
-                <span className="text-sm font-semibold text-foreground">Total em garantia</span>
-                <span className="text-lg font-bold text-foreground">{inWarranty.length}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Busca */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-        <Input
-          placeholder="Buscar por cliente, prestador, serviço ou nº..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-9"
-        />
+        {/* Barras por tipo de serviço */}
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1">
+              <Wrench className="w-4 h-4 text-primary" />
+              Por Tipo de Serviço
+            </h3>
+            <div className="h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Bar dataKey="peca" name="Peça" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="garantia" name="Serviço" fill="#f97316" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Filtros + Busca */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex gap-1 flex-wrap">
+          {filterTabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors",
+                filter === t.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:border-primary/40"
+              )}
+            >
+              {t.label}
+              {t.id === 'peca' && pecaCount > 0 && ` (${pecaCount})`}
+              {t.id === 'garantia' && garantiaCount > 0 && ` (${garantiaCount})`}
+              {t.id === 'expiring' && expiringSoon > 0 && ` (${expiringSoon})`}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+          <Input
+            placeholder="Buscar por cliente, prestador, serviço ou nº..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {/* Lista de OS */}
       {isLoading ? (
         <p className="text-center text-muted-foreground py-10">Carregando serviços...</p>
       ) : filtered.length === 0 ? (
         <p className="text-center text-muted-foreground py-10">
-          {inWarranty.length === 0 ? 'Nenhum serviço em garantia no momento' : 'Nenhum resultado para a busca'}
+          {classified.length === 0 ? 'Nenhum serviço em garantia no momento' : 'Nenhum resultado para o filtro selecionado'}
         </p>
       ) : (
         <div className="space-y-3">
           {filtered.map(req => {
-            const dias = req.updated_date ? differenceInDays(new Date(), new Date(req.updated_date)) : 0;
+            const dias = req._dias;
             const warrantyEnd = req.warranty_end_date ? new Date(req.warranty_end_date) : null;
             const expired = warrantyEnd && warrantyEnd < new Date();
             const diasRestantes = warrantyEnd ? differenceInDays(warrantyEnd, new Date()) : null;
             const currentDays = getDays(req.id);
             const isSaving = savingId === req.id;
-            const isPeca = dias <= PRAZO_PECA;
+            const isPeca = req._isPeca;
 
             return (
               <Card key={req.id}>
@@ -221,7 +322,7 @@ export default function WarrantyAdmin({ adminUser }) {
                             expired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
                           )}>
                             <ShieldCheck className="w-3 h-3 mr-1" />
-                            {expired ? 'Garantia expirada' : 'Garantia ativa'}
+                            {expired ? 'Expirada' : 'Ativa'}
                           </Badge>
                         ) : (
                           <Badge className="bg-muted text-muted-foreground text-xs border-0">Sem garantia</Badge>
@@ -229,6 +330,16 @@ export default function WarrantyAdmin({ adminUser }) {
                         {isPeca && !expired && (
                           <Badge className="bg-blue-100 text-blue-800 text-xs border-0">
                             <Package className="w-3 h-3 mr-1" />Peça
+                          </Badge>
+                        )}
+                        {!isPeca && !expired && (
+                          <Badge className="bg-orange-100 text-orange-800 text-xs border-0">
+                            <Wrench className="w-3 h-3 mr-1" />Serviço
+                          </Badge>
+                        )}
+                        {diasRestantes !== null && diasRestantes >= 0 && diasRestantes <= 7 && !expired && (
+                          <Badge className="bg-red-100 text-red-800 text-xs border-0 animate-pulse">
+                            <AlertTriangle className="w-3 h-3 mr-1" />Expira em {diasRestantes}d
                           </Badge>
                         )}
                       </div>
