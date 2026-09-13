@@ -8,6 +8,7 @@ import FavoriteButton from '../components/FavoriteButton';
 import { cn } from "@/lib/utils";
 import RatingModal from '../components/RatingModal';
 import RetornoModal from '../components/RetornoModal';
+import ClientAdditionalHoursModal from '../components/ClientAdditionalHoursModal';
 import LocationTracker from '../components/LocationTracker';
 import ServiceChat from '../components/ServiceChat';
 import PaymentModal from '../components/PaymentModal';
@@ -52,6 +53,7 @@ export default function AcompanharServico() {
   const [showPayment, setShowPayment] = useState(false);
   const [showPixPayment, setShowPixPayment] = useState(false);
   const [showRetorno, setShowRetorno] = useState(urlParams.get('retorno') === '1');
+  const [showAdditionalHours, setShowAdditionalHours] = useState(false);
   const [showSatisfactionSurvey, setShowSatisfactionSurvey] = useState(false);
   const [showTipRequest, setShowTipRequest] = useState(false);
   const [previousStatus, setPreviousStatus] = useState(null);
@@ -502,6 +504,23 @@ export default function AcompanharServico() {
         </div>
       )}
 
+      {/* Ações do cliente durante execução — horas adicionais + retorno */}
+      {request.status === 'em_andamento' && request.provider_id && (
+        <div className="bg-card rounded-3xl p-5 border border-border mb-5 space-y-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Precisa de mais tempo?</p>
+          <Button
+            onClick={() => setShowAdditionalHours(true)}
+            className="w-full rounded-2xl bg-primary text-primary-foreground font-semibold h-11"
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            Solicitar Horas Adicionais
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            Trava a agenda do prestador para o período solicitado
+          </p>
+        </div>
+      )}
+
       {/* Preço estimado ou final */}
       {(request.final_price || request.estimated_price || request.client_suggested_price) && (
         <div className="bg-card rounded-3xl p-5 border border-border mb-5 space-y-4">
@@ -691,6 +710,19 @@ export default function AcompanharServico() {
         );
       })()}
 
+      {/* Serviço em espera — cliente pode solicitar retorno do prestador */}
+      {request.status === 'em_espera' && request.provider_id && (
+        <div className="mb-5">
+          <Button
+            className="w-full rounded-2xl bg-primary text-primary-foreground font-semibold h-11"
+            onClick={() => setShowRetorno(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Solicitar Retorno do Prestador
+          </Button>
+        </div>
+      )}
+
       {request.status === 'concluido' && request.provider_id && (
         <div className="space-y-3">
           <Button 
@@ -722,6 +754,12 @@ export default function AcompanharServico() {
       />
       {showRating && <RatingModal requestId={id} onClose={handleRatingClose} />}
       {showRetorno && <RetornoModal request={request} onClose={() => setShowRetorno(false)} />}
+      {showAdditionalHours && (
+        <ClientAdditionalHoursModal
+          request={request}
+          onClose={() => setShowAdditionalHours(false)}
+        />
+      )}
       {showSatisfactionSurvey && user && (
         <SatisfactionSurveyModal
           job={request}

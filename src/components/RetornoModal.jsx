@@ -87,8 +87,9 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
     return Object.values(slotCounts).some(count => count < 3) || Object.keys(slotCounts).length === 0;
   })();
 
-  // Calcula quantos dias se passaram desde a conclusão
-  const conclusaoDate = request?.updated_date ? new Date(request.updated_date) : null;
+  // Calcula quantos dias se passaram desde a conclusão (apenas se já concluído)
+  const isCompleted = request?.status === 'concluido';
+  const conclusaoDate = isCompleted && request?.updated_date ? new Date(request.updated_date) : null;
   const diasPassados = conclusaoDate ? differenceInDays(new Date(), conclusaoDate) : 0;
 
   const tipoSelecionado = TIPOS.find(t => t.id === tipo);
@@ -221,9 +222,11 @@ export default function RetornoModal({ request, onClose, isWarrantyReturn = fals
           <div>
             <h2 className="text-lg font-bold text-foreground">Solicitar Retorno</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {diasPassados === 0
-                ? 'Serviço concluído hoje'
-                : `Concluído há ${diasPassados} dia${diasPassados > 1 ? 's' : ''}`}
+              {request?.status === 'em_espera'
+                ? 'Serviço pausado — solicite o retorno'
+                : diasPassados === 0
+                  ? 'Serviço concluído hoje'
+                  : `Concluído há ${diasPassados} dia${diasPassados > 1 ? 's' : ''}`}
             </p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted">
