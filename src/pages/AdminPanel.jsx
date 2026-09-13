@@ -33,6 +33,7 @@ import ScheduledCalendar from '../components/admin/ScheduledCalendar';
 import UndoProviderAction from '../components/admin/UndoProviderAction';
 import ReembolsosRepasses from '../components/admin/ReembolsosRepasses';
 import ActivityLog from '../components/admin/ActivityLog';
+import ProviderPerformanceDashboard from '../components/admin/ProviderPerformanceDashboard';
 import CouponsAdmin from '../components/admin/CouponsAdmin';
 import SurchargeRulesAdmin from '../components/admin/SurchargeRulesAdmin';
 import CashbackConfigAdmin from '../components/admin/CashbackConfigAdmin';
@@ -275,6 +276,9 @@ export default function AdminPanel() {
           <TabsTrigger value="metricas" className="text-xs px-2 py-1">
             <Activity className="w-3 h-3 mr-0.5" /> Métricas
           </TabsTrigger>
+          <TabsTrigger value="performance" className="text-xs px-2 py-1">
+            📈 Performance
+          </TabsTrigger>
           <TabsTrigger value="blacklist" className="text-xs px-2 py-1">
             🚫 Blacklist
           </TabsTrigger>
@@ -493,6 +497,10 @@ export default function AdminPanel() {
 
         <TabsContent value="metricas">
           <ServiceMetrics />
+        </TabsContent>
+
+        <TabsContent value="performance">
+          <ProviderPerformanceDashboard />
         </TabsContent>
 
         <TabsContent value="blacklist">
