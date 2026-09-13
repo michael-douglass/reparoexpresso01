@@ -38,7 +38,41 @@ Deno.serve(async (req) => {
     // Remove prestadores que já estão executando outro serviço
     providers = providers.filter(p => !providersInExecution.has(p.id));
     
-    console.log(`Found ${providers.length} total providers (${providersInExecution.size} em execução excluídos)`);
+    // Filtrar prestadores com indisponibilidade no horário do serviço
+    // (ex: horas adicionais reservadas pelo cliente, folgas, bloqueios de agenda)
+    const unavailabilities = await base44.asServiceRole.entities.ProviderUnavailability.list();
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const nowTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    const isProviderUnavailable = (providerId) => {
+      // Serviços agendados verificam a data/hora marcada; imediatos verificam "agora"
+      const checkDate = (serviceRequest.modality === 'agendado' && serviceRequest.scheduled_date)
+        ? serviceRequest.scheduled_date
+        : todayStr;
+      const checkTime = (serviceRequest.modality === 'agendado' && serviceRequest.scheduled_date)
+        ? (serviceRequest.scheduled_time || null)
+        : nowTime;
+
+      return unavailabilities.some(u => {
+        if (u.provider_id !== providerId) return false;
+        if (checkDate < u.start_date || checkDate > u.end_date) return false;
+        // Sem horário definido = dia inteiro indisponível
+        if (!u.start_time || !u.end_time) return true;
+        // Serviço agendado sem hora específica cai no dia inteiro
+        if (!checkTime) return true;
+        // Verifica sobreposição (lida com faixas que cruzam meia-noite)
+        if (u.start_time <= u.end_time) {
+          return checkTime >= u.start_time && checkTime <= u.end_time;
+        }
+        return checkTime >= u.start_time || checkTime <= u.end_time;
+      });
+    };
+
+    const unavailableCount = providers.filter(p => isProviderUnavailable(p.id)).length;
+    providers = providers.filter(p => !isProviderUnavailable(p.id));
+    console.log(`Excluded ${unavailableCount} providers due to unavailability (hours/absence)`);
 
     if (!providers || providers.length === 0) {
       console.log('No providers found in database');
