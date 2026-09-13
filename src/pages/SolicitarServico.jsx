@@ -431,7 +431,7 @@ export default function SolicitarServico() {
     enabled: isMotoPeca,
   });
 
-  const motoPecaPricing = motoPecaPricingData?.find(p => !p.city);
+  const motoPecaPricing = Array.isArray(motoPecaPricingData) ? motoPecaPricingData.find(p => !p.city) : undefined;
 
   const calculateMotoPecaPrice = () => {
     if (!isMotoPeca || !form.moto_peca_distance_km || !motoPecaPricing) return null;
