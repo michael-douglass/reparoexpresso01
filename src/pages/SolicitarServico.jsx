@@ -331,7 +331,10 @@ export default function SolicitarServico() {
 
 
 
-  const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const set = (field, value) => setForm(prev => ({
+    ...prev,
+    [field]: field === 'service_type' && Array.isArray(value) ? [...new Set(value)] : value,
+  }));
 
   const validateAndApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -562,7 +565,7 @@ export default function SolicitarServico() {
     mutationFn: async (formData) => {
       const { _secondProvider, requires_two_providers, tv_size, _caixaCondominio, _substituicaoTelhaTipo, ...cleanData } = formData;
       const serviceTypes = Array.isArray(cleanData.service_type) && cleanData.service_type.length > 0
-        ? cleanData.service_type
+        ? [...new Set(cleanData.service_type)]
         : [cleanData.service_type];
 
       const serviceNumber = await generateServiceNumber();
