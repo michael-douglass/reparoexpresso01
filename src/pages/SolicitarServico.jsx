@@ -1017,7 +1017,7 @@ export default function SolicitarServico() {
 
           {showTvSizeModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowTvSizeModal(false)}>
-              <div className="bg-card w-full max-w-lg rounded-t-3xl p-6 pb-8" onClick={e => e.stopPropagation()}>
+              <div className="bg-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl p-6 pb-8" onClick={e => e.stopPropagation()}>
                 <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
                 <h3 className="text-lg font-bold text-foreground mb-1 text-center">Instalação de Suporte de TV</h3>
                 <p className="text-sm text-muted-foreground text-center mb-5">Qual o tamanho da sua TV?</p>
@@ -1050,7 +1050,7 @@ export default function SolicitarServico() {
 
           {showCaixaDaguaModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowCaixaDaguaModal(false); setCaixaDaguaStep('tipo'); setCaixaDaguaTipo(null); }}>
-              <div className="bg-card w-full max-w-lg rounded-t-3xl p-6 pb-8" onClick={e => e.stopPropagation()}>
+              <div className="bg-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl p-6 pb-8" onClick={e => e.stopPropagation()}>
                 <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
 
                 {/* Step 1: Tipo */}
@@ -1182,7 +1182,7 @@ export default function SolicitarServico() {
           )}
           {showDesentupimentoModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowDesentupimentoModal(false)}>
-              <div className="bg-card w-full max-w-lg rounded-t-3xl p-4 pb-6" onClick={e => e.stopPropagation()}>
+              <div className="bg-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl p-4 pb-6" onClick={e => e.stopPropagation()}>
                 <div className="w-10 h-1 bg-border rounded-full mx-auto mb-3" />
                 <h3 className="text-base font-bold text-foreground mb-0.5 text-center">Desentupimento</h3>
                 <p className="text-xs text-muted-foreground text-center mb-3">O que precisa ser desentupido?</p>
@@ -1231,7 +1231,7 @@ export default function SolicitarServico() {
 
           {showForroGessoModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowForroGessoModal(false)}>
-              <div className="bg-card w-full max-w-lg rounded-t-3xl p-4 pb-6" onClick={e => e.stopPropagation()}>
+              <div className="bg-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl p-4 pb-6" onClick={e => e.stopPropagation()}>
                 <div className="w-10 h-1 bg-border rounded-full mx-auto mb-3" />
                 <h3 className="text-base font-bold text-foreground mb-0.5 text-center">Reparo Forro de Gesso</h3>
                 <p className="text-xs text-muted-foreground text-center mb-3">Qual tipo de reparo é necessário?</p>
@@ -1316,7 +1316,7 @@ export default function SolicitarServico() {
           {/* Modal aviso taxa de mola */}
           {showMolaAlert && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowMolaAlert(null)}>
-              <div className="bg-card w-full max-w-lg rounded-t-3xl p-6 pb-8" onClick={e => e.stopPropagation()}>
+              <div className="bg-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl p-6 pb-8" onClick={e => e.stopPropagation()}>
                 <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
                 <div className="text-center mb-5">
                   <span className="text-4xl mb-3 block">⚠️</span>
