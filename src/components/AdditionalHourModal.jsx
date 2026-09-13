@@ -15,27 +15,32 @@ export default function AdditionalHourModal({ job, onClose, onSuccess }) {
   const [loadingRate, setLoadingRate] = useState(true);
   const [manualRate, setManualRate] = useState('');
 
-  const originalPrice = job.final_price || job.estimated_price || 0;
-  const effectiveRate = hourlyRate ?? (parseFloat(manualRate) || 0);
+  const originalPrice = Number(job.final_price || job.estimated_price || 0) || 0;
+  const effectiveRate = Number(hourlyRate ?? (parseFloat(manualRate) || 0)) || 0;
   const subtotal = (hours || 0) * effectiveRate;
   const newTotal = originalPrice + subtotal;
 
   // Busca a regra de precificação do tipo de serviço
   useEffect(() => {
     if (!job?.service_type) { setLoadingRate(false); return; }
+    let cancelled = false;
     setLoadingRate(true);
-    base44.entities.ServicePricing.filter({ service_type: job.service_type })
-      .then(pricingList => {
-        // Prioriza a regra padrão (sem cidade definida)
+    (async () => {
+      try {
+        const result = await base44.entities.ServicePricing.filter({ service_type: job.service_type });
+        // Proteção contra retorno paginado/objeto (bug sistêmico do filter em alguns contextos)
+        const pricingList = Array.isArray(result) ? result : (Array.isArray(result?.data) ? result.data : []);
         const defaultRule = pricingList.find(p => !p.city) || pricingList[0];
-        if (defaultRule && defaultRule.price_min > 0) {
-          setHourlyRate(defaultRule.price_min);
-        } else {
-          setHourlyRate(null);
+        if (!cancelled) {
+          setHourlyRate(defaultRule && defaultRule.price_min > 0 ? defaultRule.price_min : null);
         }
-      })
-      .catch(() => setHourlyRate(null))
-      .finally(() => setLoadingRate(false));
+      } catch (e) {
+        if (!cancelled) setHourlyRate(null);
+      } finally {
+        if (!cancelled) setLoadingRate(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [job?.service_type]);
 
   const handleSubmit = async () => {
