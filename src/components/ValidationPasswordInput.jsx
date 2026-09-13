@@ -48,8 +48,9 @@ function ValidationPasswordInput({ expectedPassword, onValidationChange }) {
       </p>
       <input
         ref={inputRef}
-        type="text"
+        type="tel"
         inputMode="numeric"
+        pattern="[0-9]*"
         autoComplete="off"
         autoCorrect="off"
         spellCheck={false}
@@ -57,7 +58,9 @@ function ValidationPasswordInput({ expectedPassword, onValidationChange }) {
         placeholder="000000"
         defaultValue=""
         onChange={handleChange}
-        className="flex h-12 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-center font-mono text-xl tracking-widest shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={(e) => { e.currentTarget.focus(); }}
+        onTouchStart={(e) => { e.currentTarget.focus(); }}
+        className="flex h-12 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-center font-mono text-xl tracking-widest shadow-sm focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <p
         ref={errorRef}
