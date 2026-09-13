@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit, Save, X, Plus, Loader2 } from 'lucide-react';
+import { Edit, Save, X, Plus, Loader2, ShieldCheck } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const SERVICE_TYPES = [
@@ -145,15 +145,17 @@ export default function ServicePricingByCategory() {
                 className="text-sm h-8"
               />
             </div>
-            <div>
-              <Label className="text-xs">Dias de Garantia</Label>
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+              <Label className="text-xs flex items-center gap-1 font-semibold text-primary">
+                <ShieldCheck className="w-3.5 h-3.5" /> Dias de Garantia
+              </Label>
               <Input
                 type="number"
                 min={1}
                 placeholder="90"
                 value={newPricing.warranty_days ?? ''}
                 onChange={(e) => setNewPricing({ ...newPricing, warranty_days: e.target.value ? Number(e.target.value) : null })}
-                className="text-sm h-8"
+                className="text-sm h-8 mt-1"
               />
               <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
             </div>
@@ -216,14 +218,16 @@ export default function ServicePricingByCategory() {
                       className="text-sm h-8"
                     />
                   </div>
-                  <div>
-                    <Label className="text-xs">Dias de Garantia</Label>
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+                    <Label className="text-xs flex items-center gap-1 font-semibold text-primary">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Dias de Garantia
+                    </Label>
                     <Input
                       type="number"
                       min={1}
                       value={editForm.warranty_days ?? ''}
                       onChange={(e) => setEditForm({ ...editForm, warranty_days: e.target.value ? Number(e.target.value) : null })}
-                      className="text-sm h-8"
+                      className="text-sm h-8 mt-1"
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">Padrão 90 dias se vazio</p>
                   </div>
