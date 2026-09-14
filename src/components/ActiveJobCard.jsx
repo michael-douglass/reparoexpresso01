@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import ServiceChat from './ServiceChat';
+import ClientAlertTab from './ClientAlertTab';
 import ServiceCompletionModal from './ServiceCompletionModal';
 import TipRequestModal from './TipRequestModal';
 import ExtraChargesModal from './ExtraChargesModal';
@@ -764,6 +765,9 @@ export default function ActiveJobCard({ job, providerName, onUpdateStatus, onSho
 
       {/* Chat */}
       <ServiceChat requestId={liveJob.id} senderRole="prestador" senderName={providerName} />
+
+      {/* Alertas ao cliente */}
+      <ClientAlertTab job={liveJob} providerName={providerName} />
 
       {/* Ações */}
       {renderActions()}
