@@ -1,0 +1,37 @@
+{
+  "name": "Auto-creditar b\u00f4nus de cupom na carteira",
+  "description": "",
+  "trigger": {
+    "condition": "${ (.trigger.data.is_used == false) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "WalletBonus"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "auto_creditar_b_nus_de_cupom_na_carteira",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "creditBonusToWallet",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "creditBonusToWallet"
+  }
+}
